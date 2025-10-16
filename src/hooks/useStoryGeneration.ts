@@ -112,9 +112,9 @@ const DEMO_STORY: Story = {
       participation: {
         type: "gesture",
         speaker: "Dad",
-        prompt: "Can you CLAP for the magical crystal?",
+        prompt: "Give the crystal a THUMBS UP to celebrate!",
         targetWord: "crystal",
-        expectedResponses: ["clap"]
+        expectedResponses: ["thumbsup"]
       },
       ambiance: "crystal_chimes",
       music: "celebration"

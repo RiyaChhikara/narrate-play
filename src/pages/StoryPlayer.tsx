@@ -327,7 +327,7 @@ const StoryPlayer = () => {
       </div>
 
       {/* Main Content Area - Split Layout */}
-      <div className="absolute inset-0 flex items-center justify-center p-8 pt-32 pb-48">
+      <div className="absolute inset-0 flex items-center justify-center p-8 pt-32 pb-64">
         <div className="flex gap-8 w-full max-w-7xl h-full max-h-[600px]">
           {/* Left side: Story prompt (60%) with enhanced animations */}
           {state === "action" && currentScene?.participation && (

@@ -2,7 +2,45 @@ import { useEffect, useRef, useState } from "react";
 import { GestureRecognizer, FilesetResolver, DrawingUtils } from "@mediapipe/tasks-vision";
 import * as cocoSsd from '@tensorflow-models/coco-ssd';
 import '@tensorflow/tfjs';
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Mic } from "lucide-react";
+
+// Web Speech API types
+interface SpeechRecognitionEvent extends Event {
+  results: SpeechRecognitionResultList;
+}
+
+interface SpeechRecognitionResultList {
+  length: number;
+  [index: number]: SpeechRecognitionResult;
+}
+
+interface SpeechRecognitionResult {
+  isFinal: boolean;
+  [index: number]: SpeechRecognitionAlternative;
+}
+
+interface SpeechRecognitionAlternative {
+  transcript: string;
+  confidence: number;
+}
+
+interface SpeechRecognition extends EventTarget {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  start(): void;
+  stop(): void;
+  onresult: ((event: SpeechRecognitionEvent) => void) | null;
+  onend: (() => void) | null;
+  onerror: ((event: any) => void) | null;
+}
+
+declare global {
+  interface Window {
+    SpeechRecognition: new () => SpeechRecognition;
+    webkitSpeechRecognition: new () => SpeechRecognition;
+  }
+}
 
 interface WebcamFeedProps {
   isActive: boolean;
@@ -26,6 +64,7 @@ export const WebcamFeed = ({ isActive, requiredAction, requiredObject, onGesture
   const streamRef = useRef<MediaStream | null>(null);
   const gestureRecognizerRef = useRef<GestureRecognizer | null>(null);
   const objectDetectorRef = useRef<cocoSsd.ObjectDetection | null>(null);
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
   const animationFrameRef = useRef<number | null>(null);
   
   const [privacyMode, setPrivacyMode] = useState(false);
@@ -36,6 +75,84 @@ export const WebcamFeed = ({ isActive, requiredAction, requiredObject, onGesture
   const [objectFound, setObjectFound] = useState(false);
   const [showSuccessAnimation, setShowSuccessAnimation] = useState(false);
   const [detectedGestureName, setDetectedGestureName] = useState("");
+  const [isListening, setIsListening] = useState(false);
+  const [transcript, setTranscript] = useState("");
+
+  // Speech recognition for non-gesture tasks
+  useEffect(() => {
+    if (!isActive || requiredAction || requiredObject) {
+      // Only activate speech when no gesture/object is required
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+        recognitionRef.current = null;
+      }
+      setIsListening(false);
+      return;
+    }
+
+    const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
+    
+    if (!SpeechRecognitionAPI) {
+      console.error("Speech recognition not supported");
+      return;
+    }
+
+    const recognition = new SpeechRecognitionAPI();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = 'en-US';
+
+    recognition.onresult = (event: SpeechRecognitionEvent) => {
+      const results = event.results;
+      const lastResult = results[results.length - 1];
+      const transcript = lastResult[0].transcript;
+      
+      setTranscript(transcript);
+      
+      if (lastResult.isFinal) {
+        console.log("Speech detected:", transcript);
+        onObjectDetected(transcript.trim());
+      }
+    };
+
+    recognition.onerror = (event: any) => {
+      console.error("Speech recognition error:", event.error);
+      setIsListening(false);
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+      // Restart if still active
+      if (isActive && !requiredAction && !requiredObject) {
+        setTimeout(() => {
+          try {
+            recognition.start();
+            setIsListening(true);
+          } catch (e) {
+            console.error("Failed to restart recognition:", e);
+          }
+        }, 100);
+      }
+    };
+
+    recognitionRef.current = recognition;
+    
+    try {
+      recognition.start();
+      setIsListening(true);
+      console.log("Speech recognition started");
+    } catch (error) {
+      console.error("Failed to start speech recognition:", error);
+    }
+
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+        recognitionRef.current = null;
+      }
+      setIsListening(false);
+    };
+  }, [isActive, requiredAction, requiredObject, onObjectDetected]);
 
   // Initialize MediaPipe and COCO-SSD
   useEffect(() => {
@@ -241,10 +358,13 @@ export const WebcamFeed = ({ isActive, requiredAction, requiredObject, onGesture
 
   if (!isActive) return null;
 
+  // If we're in speech mode (no gesture/object required), show microphone UI
+  const isSpeechMode = !requiredAction && !requiredObject;
+
   return (
     <div className="relative w-full h-full">
       <div className={`relative rounded-2xl overflow-hidden shadow-2xl transition-all duration-300 h-full ${
-        detectionStatus === 'correct' ? 'border-8 border-green-500 shadow-[0_0_40px_rgba(34,197,94,0.8)]' : 'border-4 border-hero-orange'
+        detectionStatus === 'correct' || isListening ? 'border-8 border-green-500 shadow-[0_0_40px_rgba(34,197,94,0.8)]' : 'border-4 border-hero-orange'
       }`}>
         {/* Video */}
         <video
@@ -275,11 +395,52 @@ export const WebcamFeed = ({ isActive, requiredAction, requiredObject, onGesture
           )}
         </button>
 
-        {/* Camera Active Badge */}
+        {/* Camera/Mic Active Badge */}
         <div className="absolute top-2 right-2 bg-green-500/90 text-white px-3 py-1 rounded-full text-xs font-dm-sans font-bold flex items-center gap-2">
           <span className="w-2 h-2 bg-white rounded-full animate-pulse"></span>
-          Camera Active
+          {isSpeechMode ? (
+            <>
+              <Mic className="w-3 h-3" />
+              Listening
+            </>
+          ) : (
+            "Camera Active"
+          )}
         </div>
+
+        {/* Speech Mode Overlay */}
+        {isSpeechMode && (
+          <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-purple-500/40 to-pink-500/40 backdrop-blur-sm">
+            <div className="text-center text-white space-y-6 p-8">
+              <div className="text-9xl animate-bounce">🎤</div>
+              <p className="font-fredoka text-4xl font-bold drop-shadow-lg">
+                {isListening ? "I'm listening!" : "Starting microphone..."}
+              </p>
+              <p className="font-dm-sans text-xl">Speak clearly!</p>
+              
+              {isListening && (
+                <div className="flex gap-3 justify-center mt-6">
+                  {[...Array(5)].map((_, i) => (
+                    <div
+                      key={i}
+                      className="w-4 h-16 bg-white/90 rounded-full animate-pulse"
+                      style={{ 
+                        animationDelay: `${i * 0.1}s`,
+                        animationDuration: '0.6s'
+                      }}
+                    />
+                  ))}
+                </div>
+              )}
+              
+              {transcript && (
+                <div className="mt-6 bg-white/20 backdrop-blur-md px-6 py-4 rounded-2xl">
+                  <p className="font-fredoka text-2xl">"{transcript}"</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Success Animation Overlay */}
         {showSuccessAnimation && (

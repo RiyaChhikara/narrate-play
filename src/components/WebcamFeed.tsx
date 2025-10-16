@@ -34,6 +34,8 @@ export const WebcamFeed = ({ isActive, requiredAction, requiredObject, onGesture
   const [confidence, setConfidence] = useState(0);
   const [detectedObjects, setDetectedObjects] = useState<Array<{ class: string; score: number; bbox: number[] }>>([]);
   const [objectFound, setObjectFound] = useState(false);
+  const [showSuccessAnimation, setShowSuccessAnimation] = useState(false);
+  const [detectedGestureName, setDetectedGestureName] = useState("");
 
   // Initialize MediaPipe and COCO-SSD
   useEffect(() => {
@@ -175,8 +177,11 @@ export const WebcamFeed = ({ isActive, requiredAction, requiredObject, onGesture
             setConfidence(conf);
 
             if (recognizedGesture && conf > 0.7) {
+              setDetectedGestureName(recognizedGesture);
               if (requiredAction && recognizedGesture === requiredAction) {
                 setDetectionStatus("correct");
+                setShowSuccessAnimation(true);
+                setTimeout(() => setShowSuccessAnimation(false), 2000);
                 onGestureDetected(recognizedGesture);
               } else {
                 setDetectionStatus("incorrect");
@@ -237,9 +242,9 @@ export const WebcamFeed = ({ isActive, requiredAction, requiredObject, onGesture
   if (!isActive) return null;
 
   return (
-    <div className="absolute top-24 right-6 z-20">
-      <div className={`relative rounded-2xl overflow-hidden shadow-2xl transition-all duration-300 ${
-        isActive ? 'border-4 border-hero-orange animate-pulse' : 'border-4 border-white'
+    <div className="relative w-full h-full">
+      <div className={`relative rounded-2xl overflow-hidden shadow-2xl transition-all duration-300 h-full ${
+        detectionStatus === 'correct' ? 'border-8 border-green-500 shadow-[0_0_40px_rgba(34,197,94,0.8)]' : 'border-4 border-hero-orange'
       }`}>
         {/* Video */}
         <video
@@ -247,7 +252,7 @@ export const WebcamFeed = ({ isActive, requiredAction, requiredObject, onGesture
           autoPlay
           playsInline
           muted
-          className={`w-64 h-48 object-cover transform scale-x-[-1] ${privacyMode ? 'blur-[20px]' : ''}`}
+          className={`w-full h-full object-cover transform scale-x-[-1] ${privacyMode ? 'blur-[20px]' : ''}`}
         />
         
         {/* Canvas overlay for skeleton and objects */}
@@ -270,12 +275,45 @@ export const WebcamFeed = ({ isActive, requiredAction, requiredObject, onGesture
           )}
         </button>
 
-        {/* Privacy Badge */}
-        <div className="absolute top-2 right-2 bg-red-500/90 text-white px-3 py-1 rounded-full text-xs font-dm-sans font-bold">
-          🔴 NOT RECORDED
+        {/* Camera Active Badge */}
+        <div className="absolute top-2 right-2 bg-green-500/90 text-white px-3 py-1 rounded-full text-xs font-dm-sans font-bold flex items-center gap-2">
+          <span className="w-2 h-2 bg-white rounded-full animate-pulse"></span>
+          Camera Active
         </div>
-        <div className="absolute top-9 right-2 text-white/90 text-[10px] font-dm-sans">
-          Processing on device only
+
+        {/* Success Animation Overlay */}
+        {showSuccessAnimation && (
+          <div className="absolute inset-0 bg-green-500/30 backdrop-blur-sm flex items-center justify-center animate-scale-in z-20">
+            <div className="text-center">
+              <div className="text-9xl animate-bounce mb-4">✓</div>
+              <p className="text-white font-fredoka text-4xl font-bold drop-shadow-lg animate-pulse">
+                {detectedGestureName.toUpperCase()} detected!
+              </p>
+              <div className="flex justify-center gap-2 mt-4">
+                {[...Array(6)].map((_, i) => (
+                  <div
+                    key={i}
+                    className="text-4xl animate-bounce"
+                    style={{ animationDelay: `${i * 0.1}s` }}
+                  >
+                    ✨
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Debug Overlay */}
+        <div className="absolute top-12 left-2 bg-black/80 text-white px-3 py-2 rounded-lg text-xs font-mono">
+          <div>Status: <span className="text-green-400">{detectionStatus || 'waiting'}</span></div>
+          <div>Hand: <span className="text-yellow-400">{handDetected ? 'detected' : 'none'}</span></div>
+          {detectedGestureName && (
+            <div>Gesture: <span className="text-blue-400">{detectedGestureName}</span></div>
+          )}
+          {confidence > 0 && (
+            <div>Conf: <span className="text-purple-400">{(confidence * 100).toFixed(0)}%</span></div>
+          )}
         </div>
 
         {/* Detection Status */}

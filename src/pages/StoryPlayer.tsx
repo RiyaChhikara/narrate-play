@@ -338,15 +338,73 @@ const StoryPlayer = () => {
         </span>
       </div>
 
-      {/* Small webcam preview in corner */}
-      <div className="absolute bottom-40 right-6 w-48 h-36 rounded-2xl overflow-hidden border-4 border-white/30 shadow-2xl z-20">
-        <WebcamFeed 
-          isActive={state === "action"} 
-          requiredAction={undefined}
-          requiredObject={undefined}
-          onGestureDetected={handleGestureDetected}
-          onObjectDetected={handleObjectDetected}
-        />
+      {/* Main Content Area - Split Layout */}
+      <div className="absolute inset-0 flex items-center justify-center p-8 pt-32 pb-48">
+        <div className="flex gap-8 w-full max-w-7xl h-full max-h-[600px]">
+          {/* Left side: Story prompt (60%) */}
+          {state === "action" && currentScene?.participation && (
+            <div className="flex-[0.6] flex items-center justify-center">
+              <div className="bg-white rounded-3xl px-12 py-10 shadow-[0_0_40px_rgba(255,140,66,0.4)] border-4 border-hero-orange text-center animate-scale-in max-w-2xl">
+                {currentScene.participation.type === 'object' ? (
+                  <>
+                    <div className="text-8xl mb-4 animate-bounce">📦</div>
+                    <h2 className="font-fredoka text-4xl font-bold text-deep-navy mb-2">
+                      {currentScene.participation.prompt}
+                    </h2>
+                    <p className="font-dm-sans text-lg text-muted-foreground mb-2">
+                      Look around your room!
+                    </p>
+                    <p className="font-dm-sans text-sm text-muted-foreground/70">
+                      Show it to the camera! 📹✨
+                    </p>
+                  </>
+                ) : currentScene.participation.type === 'gesture' ? (
+                  <>
+                    <div className="text-8xl mb-4 animate-bounce">✨</div>
+                    <h2 className="font-fredoka text-4xl font-bold text-deep-navy mb-2">
+                      {currentScene.participation.prompt}
+                    </h2>
+                    <p className="font-dm-sans text-lg text-muted-foreground mb-2">
+                      Show me your move!
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <div className="text-8xl mb-4 animate-pulse">💭</div>
+                    <h2 className="font-fredoka text-3xl font-bold text-deep-navy mb-2">
+                      {currentScene.participation.prompt}
+                    </h2>
+                    <p className="font-dm-sans text-lg text-muted-foreground">
+                      {currentScene.participation.type === 'word' 
+                        ? 'Say it out loud!'
+                        : 'Make your choice!'}
+                    </p>
+                    {currentScene.participation.expectedResponses && (
+                      <div className="flex gap-3 justify-center mt-4">
+                        {currentScene.participation.expectedResponses.map((option) => (
+                          <div key={option} className="px-4 py-2 bg-hero-orange/20 rounded-lg border-2 border-hero-orange">
+                            <span className="font-fredoka text-lg">{option}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            </div>
+          )}
+          
+          {/* Right side: Large webcam feed (40%) */}
+          <div className="flex-[0.4] min-h-[400px]">
+            <WebcamFeed 
+              isActive={state === "action"} 
+              requiredAction={currentScene?.participation?.type === 'gesture' ? currentScene.participation.expectedResponses?.[0] : undefined}
+              requiredObject={currentScene?.participation?.type === 'object' ? currentScene.participation.expectedResponses?.[0] : undefined}
+              onGestureDetected={handleGestureDetected}
+              onObjectDetected={handleObjectDetected}
+            />
+          </div>
+        </div>
       </div>
 
       {/* Progress dots */}
@@ -365,63 +423,6 @@ const StoryPlayer = () => {
         ))}
       </div>
 
-      {state === "action" && currentScene?.participation && (
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 flex flex-col items-center gap-6 max-w-2xl">
-          <div className="bg-white rounded-3xl px-12 py-10 shadow-[0_0_40px_rgba(255,140,66,0.4)] border-4 border-hero-orange text-center animate-scale-in">
-            {currentScene.participation.type === 'object' ? (
-              <>
-                <div className="text-8xl mb-4 animate-bounce">
-                  📦
-                </div>
-                <h2 className="font-fredoka text-4xl font-bold text-deep-navy mb-2">
-                  {currentScene.participation.prompt}
-                </h2>
-                <p className="font-dm-sans text-lg text-muted-foreground mb-2">
-                  Look around your room!
-                </p>
-                <p className="font-dm-sans text-sm text-muted-foreground/70">
-                  Show it to the camera! 📹✨
-                </p>
-              </>
-            ) : currentScene.participation.type === 'gesture' ? (
-              <>
-                <div className="text-8xl mb-4 animate-bounce">
-                  ✨
-                </div>
-                <h2 className="font-fredoka text-4xl font-bold text-deep-navy mb-2">
-                  {currentScene.participation.prompt}
-                </h2>
-                <p className="font-dm-sans text-lg text-muted-foreground mb-2">
-                  Show me your move!
-                </p>
-              </>
-            ) : (
-              <>
-                <div className="text-8xl mb-4 animate-pulse">
-                  💭
-                </div>
-                <h2 className="font-fredoka text-3xl font-bold text-deep-navy mb-2">
-                  {currentScene.participation.prompt}
-                </h2>
-                <p className="font-dm-sans text-lg text-muted-foreground">
-                  {currentScene.participation.type === 'word' 
-                    ? 'Say it out loud!'
-                    : 'Make your choice!'}
-                </p>
-                {currentScene.participation.expectedResponses && (
-                  <div className="flex gap-3 justify-center mt-4">
-                    {currentScene.participation.expectedResponses.map((option) => (
-                      <div key={option} className="px-4 py-2 bg-hero-orange/20 rounded-lg border-2 border-hero-orange">
-                        <span className="font-fredoka text-lg">{option}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </>
-            )}
-          </div>
-        </div>
-      )}
 
       {state === "success" && (
         <div className="absolute inset-0 z-30 flex items-center justify-center bg-green-500/20 backdrop-blur-sm animate-fade-in">

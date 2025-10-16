@@ -5,6 +5,8 @@ import { WebcamFeed } from "@/components/WebcamFeed";
 import { useToast } from "@/hooks/use-toast";
 import { useStoryGeneration, type StoryScene } from "@/hooks/useStoryGeneration";
 import { useAudioGeneration } from "@/hooks/useAudioGeneration";
+import { SceneBackground } from "@/components/SceneBackground";
+import { ConfettiCanvas } from "@/components/ConfettiCanvas";
 
 type StoryState = "passive" | "action" | "success";
 
@@ -20,10 +22,11 @@ const StoryPlayer = () => {
   const [showSettings, setShowSettings] = useState(false);
   const [narrationText, setNarrationText] = useState("");
   const [gestureDetected, setGestureDetected] = useState(false);
-  const [objectDetected, setObjectDetected] = useState(false);
+  const [speechDetected, setSpeechDetected] = useState(false);
   const [storyScenes, setStoryScenes] = useState<StoryScene[]>([]);
   const [isGeneratingStory, setIsGeneratingStory] = useState(true);
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const currentScene = storyScenes[sceneIndex];
@@ -95,7 +98,7 @@ const StoryPlayer = () => {
         // After narration, show participation prompt
         setState("action");
         setGestureDetected(false);
-        setObjectDetected(false);
+        setSpeechDetected(false);
 
         // Play participation prompt
         if (currentScene.participation) {
@@ -128,11 +131,8 @@ const StoryPlayer = () => {
 
     if (type === 'gesture') {
       return gestureDetected;
-    } else if (type === 'object') {
-      return objectDetected;
     } else if (type === 'choice' || type === 'word') {
-      // For choice/word, we'll detect through speech
-      return gestureDetected; // Reuse gesture detection for speech
+      return speechDetected;
     }
     
     return false;
@@ -142,7 +142,7 @@ const StoryPlayer = () => {
     if (state === "action" && checkSceneCompletion()) {
       handleSceneComplete();
     }
-  }, [gestureDetected, objectDetected, state]);
+  }, [gestureDetected, speechDetected, state]);
 
   const handleGestureDetected = async (gesture: string) => {
     if (!currentScene?.participation || state !== "action") return;
@@ -160,19 +160,20 @@ const StoryPlayer = () => {
     }
   };
 
-  const handleObjectDetected = async (object: string) => {
-    if (state === "action" && !objectDetected) {
-      setObjectDetected(true);
+  const handleSpeechDetected = async (text: string) => {
+    if (state === "action" && !speechDetected) {
+      setSpeechDetected(true);
       
       toast({
-        title: "✨ Found it!",
-        description: `You found the ${object}!`,
+        title: "🗣️ Great job!",
+        description: `You said "${text}"!`,
       });
     }
   };
 
   const handleSceneComplete = async () => {
     setState("success");
+    setShowConfetti(true);
 
     toast({
       title: "🌟 Incredible!",
@@ -192,11 +193,12 @@ const StoryPlayer = () => {
 
     // Wait for celebration animation
     setTimeout(() => {
+      setShowConfetti(false);
       if (sceneIndex < storyScenes.length - 1) {
         setSceneIndex(sceneIndex + 1);
         setState("passive");
         setGestureDetected(false);
-        setObjectDetected(false);
+        setSpeechDetected(false);
       } else {
         toast({
           title: "🎊 Story Complete!",
@@ -204,7 +206,7 @@ const StoryPlayer = () => {
         });
         setTimeout(() => navigate("/stories"), 2000);
       }
-    }, 2000);
+    }, 3000);
   };
 
   const generateConversationalResponse = async () => {
@@ -257,13 +259,11 @@ const StoryPlayer = () => {
         
         const { type } = currentScene.participation;
         if (type === 'gesture') {
-          return `✨ Time to participate!`;
-        } else if (type === 'object') {
-          return `🔍 Find the object!`;
+          return `✨ Show your gesture!`;
         } else if (type === 'choice') {
           return "💭 Make your choice!";
         } else if (type === 'word') {
-          return "🗣️ Say the magic word!";
+          return "🗣️ Say it out loud!";
         }
         return "✨ Your turn!";
       case "success":
@@ -291,24 +291,12 @@ const StoryPlayer = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-400 via-pink-300 to-orange-200 relative overflow-hidden">
-      {/* Floating stars */}
-      <div className="absolute inset-0 pointer-events-none">
-        {[...Array(20)].map((_, i) => (
-          <div
-            key={i}
-            className="absolute animate-float"
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              animationDelay: `${Math.random() * 3}s`,
-              animationDuration: `${3 + Math.random() * 2}s`,
-            }}
-          >
-            ✨
-          </div>
-        ))}
-      </div>
+    <div className="min-h-screen relative overflow-hidden">
+      {/* Scene Background */}
+      <SceneBackground sceneNumber={sceneIndex} totalScenes={storyScenes.length} />
+      
+      {/* Confetti on Success */}
+      {showConfetti && <ConfettiCanvas />}
 
       {/* Back button */}
       <button
@@ -341,26 +329,30 @@ const StoryPlayer = () => {
       {/* Main Content Area - Split Layout */}
       <div className="absolute inset-0 flex items-center justify-center p-8 pt-32 pb-48">
         <div className="flex gap-8 w-full max-w-7xl h-full max-h-[600px]">
-          {/* Left side: Story prompt (60%) */}
+          {/* Left side: Story prompt (60%) with enhanced animations */}
           {state === "action" && currentScene?.participation && (
-            <div className="flex-[0.6] flex items-center justify-center">
-              <div className="bg-white rounded-3xl px-12 py-10 shadow-[0_0_40px_rgba(255,140,66,0.4)] border-4 border-hero-orange text-center animate-scale-in max-w-2xl">
-                {currentScene.participation.type === 'object' ? (
+            <div className="flex-[0.6] flex items-center justify-center animate-[slideInUp_0.6s_ease-out]">
+              <div className="bg-white/95 backdrop-blur-xl rounded-3xl px-12 py-10 shadow-[0_0_60px_rgba(255,140,66,0.6)] border-4 border-hero-orange text-center max-w-2xl animate-[pulse_2s_ease-in-out_infinite] relative">
+                {/* Floating sparkles around card */}
+                <div className="absolute inset-0 pointer-events-none">
+                  {[...Array(6)].map((_, i) => (
+                    <div
+                      key={i}
+                      className="absolute text-2xl animate-float opacity-70"
+                      style={{
+                        left: `${10 + Math.random() * 80}%`,
+                        top: `${10 + Math.random() * 80}%`,
+                        animationDelay: `${Math.random() * 2}s`,
+                      }}
+                    >
+                      ✨
+                    </div>
+                  ))}
+                </div>
+
+                {currentScene.participation.type === 'gesture' ? (
                   <>
-                    <div className="text-8xl mb-4 animate-bounce">📦</div>
-                    <h2 className="font-fredoka text-4xl font-bold text-deep-navy mb-2">
-                      {currentScene.participation.prompt}
-                    </h2>
-                    <p className="font-dm-sans text-lg text-muted-foreground mb-2">
-                      Look around your room!
-                    </p>
-                    <p className="font-dm-sans text-sm text-muted-foreground/70">
-                      Show it to the camera! 📹✨
-                    </p>
-                  </>
-                ) : currentScene.participation.type === 'gesture' ? (
-                  <>
-                    <div className="text-8xl mb-4 animate-bounce">✨</div>
+                    <div className="text-8xl mb-4 animate-bounce">🤲</div>
                     <h2 className="font-fredoka text-4xl font-bold text-deep-navy mb-2">
                       {currentScene.participation.prompt}
                     </h2>
@@ -370,19 +362,17 @@ const StoryPlayer = () => {
                   </>
                 ) : (
                   <>
-                    <div className="text-8xl mb-4 animate-pulse">💭</div>
-                    <h2 className="font-fredoka text-3xl font-bold text-deep-navy mb-2">
+                    <div className="text-8xl mb-4 animate-pulse">🗣️</div>
+                    <h2 className="font-fredoka text-4xl font-bold text-deep-navy mb-2">
                       {currentScene.participation.prompt}
                     </h2>
                     <p className="font-dm-sans text-lg text-muted-foreground">
-                      {currentScene.participation.type === 'word' 
-                        ? 'Say it out loud!'
-                        : 'Make your choice!'}
+                      Say it out loud!
                     </p>
                     {currentScene.participation.expectedResponses && (
-                      <div className="flex gap-3 justify-center mt-4">
-                        {currentScene.participation.expectedResponses.map((option) => (
-                          <div key={option} className="px-4 py-2 bg-hero-orange/20 rounded-lg border-2 border-hero-orange">
+                      <div className="flex gap-3 justify-center mt-4 flex-wrap">
+                        {currentScene.participation.expectedResponses.slice(0, 5).map((option) => (
+                          <div key={option} className="px-4 py-2 bg-hero-orange/20 rounded-lg border-2 border-hero-orange animate-pulse">
                             <span className="font-fredoka text-lg">{option}</span>
                           </div>
                         ))}
@@ -399,77 +389,119 @@ const StoryPlayer = () => {
             <WebcamFeed 
               isActive={state === "action"} 
               requiredAction={currentScene?.participation?.type === 'gesture' ? currentScene.participation.expectedResponses?.[0] : undefined}
-              requiredObject={currentScene?.participation?.type === 'object' ? currentScene.participation.expectedResponses?.[0] : undefined}
+              requiredObject={undefined}
               onGestureDetected={handleGestureDetected}
-              onObjectDetected={handleObjectDetected}
+              onObjectDetected={handleSpeechDetected}
             />
           </div>
         </div>
       </div>
 
-      {/* Progress dots */}
-      <div className="absolute bottom-32 left-1/2 -translate-x-1/2 flex gap-2 z-20">
-        {storyScenes.map((_, idx) => (
-          <div
-            key={idx}
-            className={`w-3 h-3 rounded-full transition-all duration-300 ${
-              idx === sceneIndex
-                ? 'bg-hero-orange w-8 shadow-lg shadow-hero-orange/50'
-                : idx < sceneIndex
-                ? 'bg-green-400'
-                : 'bg-white/50'
-            }`}
-          />
-        ))}
+      {/* Enhanced Progress Indicator - Visual Journey */}
+      <div className="absolute bottom-32 left-1/2 -translate-x-1/2 z-20">
+        <div className="flex items-center gap-4 bg-white/90 backdrop-blur-md px-8 py-4 rounded-full shadow-2xl">
+          {storyScenes.map((_, idx) => (
+            <div key={idx} className="flex items-center">
+              <div
+                className={`relative transition-all duration-500 ${
+                  idx === sceneIndex
+                    ? 'w-12 h-12 animate-pulse'
+                    : 'w-8 h-8'
+                }`}
+              >
+                <div
+                  className={`w-full h-full rounded-full flex items-center justify-center font-fredoka font-bold transition-all duration-500 ${
+                    idx < sceneIndex
+                      ? 'bg-green-400 text-white scale-100'
+                      : idx === sceneIndex
+                      ? 'bg-hero-orange text-white shadow-lg shadow-hero-orange/50'
+                      : 'bg-gray-200 text-gray-400'
+                  }`}
+                >
+                  {idx < sceneIndex ? '✓' : idx + 1}
+                </div>
+                {idx === sceneIndex && (
+                  <div className="absolute inset-0 rounded-full bg-hero-orange/30 animate-ping" />
+                )}
+              </div>
+              {idx < storyScenes.length - 1 && (
+                <div
+                  className={`w-12 h-1 mx-2 rounded-full transition-all duration-500 ${
+                    idx < sceneIndex ? 'bg-green-400' : 'bg-gray-200'
+                  }`}
+                />
+              )}
+            </div>
+          ))}
+        </div>
       </div>
 
 
       {state === "success" && (
-        <div className="absolute inset-0 z-30 flex items-center justify-center bg-green-500/20 backdrop-blur-sm animate-fade-in">
-          <div className="text-center">
-            <div className="text-9xl animate-bounce">🎉</div>
-            <h2 className="font-fredoka text-5xl font-bold text-white drop-shadow-lg mt-4">
+        <div className="absolute inset-0 z-30 flex items-center justify-center bg-gradient-to-br from-green-400/30 via-yellow-300/30 to-orange-400/30 backdrop-blur-md animate-fade-in">
+          <div className="text-center relative">
+            <div className="text-[12rem] animate-[bounce_0.6s_ease-in-out_3] scale-110">
+              🎉
+            </div>
+            <h2 className="font-fredoka text-7xl font-bold text-white drop-shadow-[0_4px_20px_rgba(0,0,0,0.5)] mt-4 animate-[scale-in_0.5s_ease-out]">
               You did it!
             </h2>
-            {[...Array(10)].map((_, i) => (
+            <p className="font-dm-sans text-2xl text-white/90 mt-4 animate-fade-in">
+              That was amazing! 🌟
+            </p>
+            {[...Array(30)].map((_, i) => (
               <div
                 key={i}
-                className="absolute text-4xl animate-float"
+                className="absolute text-5xl animate-float"
                 style={{
-                  left: `${20 + Math.random() * 60}%`,
-                  top: `${20 + Math.random() * 60}%`,
-                  animationDelay: `${Math.random() * 0.5}s`,
+                  left: `${-20 + Math.random() * 140}%`,
+                  top: `${-20 + Math.random() * 140}%`,
+                  animationDelay: `${Math.random() * 0.8}s`,
+                  animationDuration: `${1.5 + Math.random()}s`,
                 }}
               >
-                {['⭐', '✨', '🎉', '🌟'][Math.floor(Math.random() * 4)]}
+                {['⭐', '✨', '🎉', '🌟', '💫', '🎊'][Math.floor(Math.random() * 6)]}
               </div>
             ))}
           </div>
         </div>
       )}
 
-      {/* Story text with speaker indicator */}
-      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/70 to-transparent p-10 z-10">
-        <div className="max-w-4xl mx-auto">
-          <div className="flex items-start gap-4">
-            <div className="text-4xl">
-              {isPlayingAudio ? "🎭" : "📖"}
-            </div>
-            <div className="flex-1">
-              <p className="text-white font-dm-sans text-2xl leading-relaxed animate-fade-in drop-shadow-lg">
-                {narrationText || (currentScene ? "Listen to the story..." : "")}
-              </p>
-              {isPlayingAudio && (
-                <div className="mt-3 flex gap-1">
-                  {[...Array(3)].map((_, i) => (
-                    <div
-                      key={i}
-                      className="w-2 h-6 bg-hero-orange rounded-full animate-pulse"
-                      style={{ animationDelay: `${i * 0.15}s` }}
-                    />
-                  ))}
+      {/* Narration Bar - Speech Bubble Style */}
+      <div className="absolute bottom-0 left-0 right-0 z-10">
+        <div className="bg-gradient-to-t from-black/95 via-black/80 to-transparent rounded-t-[32px] p-8 shadow-[0_-8px_32px_rgba(0,0,0,0.3)]">
+          <div className="max-w-5xl mx-auto">
+            <div className="flex items-start gap-6">
+              {/* Character Avatar */}
+              <div className="flex-shrink-0">
+                <div className="w-16 h-16 rounded-full bg-hero-orange flex items-center justify-center text-3xl shadow-lg">
+                  {isPlayingAudio ? "🎭" : "📖"}
                 </div>
-              )}
+              </div>
+              
+              {/* Text Content */}
+              <div className="flex-1 pt-2">
+                <p className="text-white font-dm-sans text-3xl leading-relaxed animate-fade-in drop-shadow-lg">
+                  {narrationText || (currentScene ? "Listen to the story..." : "")}
+                </p>
+                
+                {/* Animated Waveform */}
+                {isPlayingAudio && (
+                  <div className="mt-4 flex gap-2 items-end">
+                    {[...Array(8)].map((_, i) => (
+                      <div
+                        key={i}
+                        className="w-2 bg-hero-orange rounded-full animate-pulse"
+                        style={{ 
+                          height: `${20 + Math.random() * 20}px`,
+                          animationDelay: `${i * 0.1}s`,
+                          animationDuration: '0.8s'
+                        }}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>

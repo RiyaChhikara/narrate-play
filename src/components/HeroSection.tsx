@@ -53,23 +53,48 @@ const HeroSection = () => {
 
       <div className="absolute top-0 left-0 bottom-0 w-1/2 bg-gradient-to-r from-deep-navy/80 to-transparent pointer-events-none" />
 
-      <div className="absolute left-0 top-1/2 -translate-y-1/2 pl-20 max-w-xl z-10">
+      <div className="absolute left-0 top-1/2 -translate-y-1/2 pl-20 max-w-2xl z-10">
         <h1 className="font-fredoka text-5xl md:text-6xl font-bold text-off-white leading-tight tracking-wide drop-shadow-[0_4px_12px_rgba(0,0,0,0.8)]">
           Stories That Come Alive
         </h1>
         
-        <p className="font-dm-sans text-lg md:text-xl text-off-white mt-6 drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]">
+        <p className="font-dm-sans text-2xl text-off-white mt-6 drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)] font-semibold">
           Your voice. Your hero.
         </p>
 
-        <p className="font-dm-sans text-sm text-off-white/90 mt-6 drop-shadow-[0_2px_6px_rgba(0,0,0,0.6)]">
+        {/* Value Proposition Panel */}
+        <div className="mt-8 bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20">
+          <p className="font-dm-sans text-lg text-off-white mb-4 font-semibold">
+            Interactive speech therapy for neurodivergent children
+          </p>
+          <div className="space-y-2">
+            <div className="flex items-start gap-3">
+              <span className="text-xl">🗣️</span>
+              <p className="font-dm-sans text-off-white/90">Practice words through storytelling</p>
+            </div>
+            <div className="flex items-start gap-3">
+              <span className="text-xl">🤲</span>
+              <p className="font-dm-sans text-off-white/90">Learn through physical gestures</p>
+            </div>
+            <div className="flex items-start gap-3">
+              <span className="text-xl">👀</span>
+              <p className="font-dm-sans text-off-white/90">Engage multiple senses</p>
+            </div>
+            <div className="flex items-start gap-3">
+              <span className="text-xl">❤️</span>
+              <p className="font-dm-sans text-off-white/90">Told in your family's voice</p>
+            </div>
+          </div>
+        </div>
+
+        <p className="font-dm-sans text-sm text-off-white/90 mt-6 drop-shadow-[0_2px_6px_rgba(0,0,0,0.6)] font-semibold">
           Ages 4-7 • Multilingual • For neurodivergent children
         </p>
 
         <Button 
           size="lg"
           onClick={() => navigate("/stories")}
-          className="bg-hero-orange hover:bg-hero-orange/90 text-off-white px-10 py-6 rounded-full font-fredoka text-xl font-semibold hover:scale-105 transition-all duration-300 shadow-2xl mt-10"
+          className="bg-hero-orange hover:bg-hero-orange/90 text-off-white px-10 py-6 rounded-full font-fredoka text-xl font-semibold hover:scale-105 transition-all duration-300 shadow-2xl mt-8"
         >
           Start Your Adventure →
         </Button>

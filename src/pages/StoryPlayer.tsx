@@ -6,7 +6,6 @@ import { useToast } from "@/hooks/use-toast";
 import { useStoryGeneration, type StoryScene } from "@/hooks/useStoryGeneration";
 import { useAudioGeneration } from "@/hooks/useAudioGeneration";
 import { SceneBackground } from "@/components/SceneBackground";
-import { ConfettiCanvas } from "@/components/ConfettiCanvas";
 
 type StoryState = "passive" | "action" | "success";
 
@@ -27,7 +26,6 @@ const StoryPlayer = () => {
   const [isGeneratingStory, setIsGeneratingStory] = useState(true);
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
   const [canListen, setCanListen] = useState(false);
-  const [showConfetti, setShowConfetti] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const currentScene = storyScenes[sceneIndex];
@@ -173,8 +171,8 @@ const StoryPlayer = () => {
       setGestureDetected(true);
       
       toast({
-        title: "🎉 Perfect gesture!",
-        description: `Great ${gesture}!`,
+        title: "Perfect",
+        description: `Well done`,
       });
     }
   };
@@ -188,8 +186,8 @@ const StoryPlayer = () => {
       console.log(`✅ Speech accepted: "${text}"`);
       
       toast({
-        title: "🗣️ Great job!",
-        description: `You said "${text}"!`,
+        title: "Excellent",
+        description: `"${text}"`,
       });
     }
   };
@@ -197,28 +195,10 @@ const StoryPlayer = () => {
   const handleSceneComplete = async () => {
     console.log('Scene complete! Moving to success state');
     setState("success");
-    setShowConfetti(true);
 
-    toast({
-      title: "🌟 Incredible!",
-      description: "Perfect! Let's continue the adventure!",
-    });
-
-    // Play celebration audio
-    const celebrationAudio = await generateAudio(
-      "Wonderful! You did it! Let's see what happens next!",
-      currentScene.participation.speaker,
-      "excited"
-    );
-    
-    if (celebrationAudio) {
-      await playAudioFromBase64(celebrationAudio);
-    }
-
-    // Wait for celebration animation
+    // Brief subtle pause
     setTimeout(() => {
       console.log('Moving to next scene or ending story');
-      setShowConfetti(false);
       
       if (sceneIndex < storyScenes.length - 1) {
         console.log(`Advancing to scene ${sceneIndex + 2}`);
@@ -229,12 +209,12 @@ const StoryPlayer = () => {
       } else {
         console.log('Story complete!');
         toast({
-          title: "🎊 Story Complete!",
-          description: "Have a big smile.",
+          title: "Story Complete",
+          description: "Well done",
         });
-        setTimeout(() => navigate("/stories"), 2000);
+        setTimeout(() => navigate("/stories"), 1500);
       }
-    }, 3000);
+    }, 1200);
   };
 
   const generateConversationalResponse = async () => {
@@ -295,7 +275,7 @@ const StoryPlayer = () => {
         }
         return "✨ Your turn!";
       case "success":
-        return "🎉 Amazing! Well done!";
+        return "✓ Well done";
       default:
         return "";
     }
@@ -355,26 +335,8 @@ const StoryPlayer = () => {
         <div className="flex flex-col lg:flex-row gap-4 sm:gap-6 lg:gap-8 w-full max-w-7xl h-full max-h-[600px]">
           {/* Participation Prompt - Responsive */}
           {state === "action" && currentScene?.participation && (
-            <div className="flex-1 lg:flex-[0.6] flex items-center justify-center animate-[slideInUp_0.6s_ease-out]">
-              <div className="bg-white/95 backdrop-blur-xl rounded-2xl sm:rounded-3xl px-6 sm:px-10 md:px-12 py-6 sm:py-8 md:py-10 shadow-[0_0_40px_rgba(255,140,66,0.4)] border-2 sm:border-4 border-hero-orange text-center max-w-2xl relative">
-                {/* Subtle sparkles */}
-                <div className="absolute inset-0 pointer-events-none">
-                  {[...Array(3)].map((_, i) => (
-                    <div
-                      key={i}
-                      className="absolute text-lg animate-float opacity-40"
-                      style={{
-                        left: `${20 + i * 30}%`,
-                        top: `${20 + i * 25}%`,
-                        animationDelay: `${i * 0.8}s`,
-                        animationDuration: '3s',
-                      }}
-                    >
-                      ✨
-                    </div>
-                  ))}
-                </div>
-
+            <div className="flex-1 lg:flex-[0.6] flex items-center justify-center animate-fade-in">
+              <div className="bg-white/95 backdrop-blur-xl rounded-2xl sm:rounded-3xl px-6 sm:px-10 md:px-12 py-6 sm:py-8 md:py-10 shadow-lg border border-border text-center max-w-2xl transition-all duration-300">
                 {currentScene.participation.type === 'gesture' ? (
                   <>
                     <div className="text-6xl sm:text-7xl md:text-8xl mb-4">🤲</div>
@@ -382,7 +344,7 @@ const StoryPlayer = () => {
                       {currentScene.participation.prompt}
                     </h2>
                     <p className="font-dm-sans text-base sm:text-lg text-muted-foreground mb-2">
-                      Show me your move!
+                      Show me your move
                     </p>
                   </>
                 ) : (
@@ -392,13 +354,13 @@ const StoryPlayer = () => {
                       {currentScene.participation.prompt}
                     </h2>
                     <p className="font-dm-sans text-base sm:text-lg text-muted-foreground">
-                      Say it out loud!
+                      Say it out loud
                     </p>
                     {currentScene.participation.expectedResponses && (
                       <div className="flex gap-2 sm:gap-3 justify-center mt-3 sm:mt-4 flex-wrap">
                         {currentScene.participation.expectedResponses.slice(0, 5).map((option) => (
-                          <div key={option} className="px-3 sm:px-4 py-1.5 sm:py-2 bg-hero-orange/20 rounded-lg border-2 border-hero-orange">
-                            <span className="font-fredoka text-base sm:text-lg">{option}</span>
+                          <div key={option} className="px-3 sm:px-4 py-1.5 sm:py-2 bg-muted rounded-lg border border-border">
+                            <span className="font-fredoka text-base sm:text-lg text-foreground">{option}</span>
                           </div>
                         ))}
                       </div>
@@ -464,31 +426,12 @@ const StoryPlayer = () => {
 
 
       {state === "success" && (
-        <div className="absolute inset-0 z-30 flex items-center justify-center bg-gradient-to-br from-green-400/30 via-yellow-300/30 to-orange-400/30 backdrop-blur-md animate-fade-in">
-          <div className="text-center relative">
-            <div className="text-[12rem] animate-[bounce_0.6s_ease-in-out_3] scale-110">
-              🎉
-            </div>
-            <h2 className="font-fredoka text-7xl font-bold text-white drop-shadow-[0_4px_20px_rgba(0,0,0,0.5)] mt-4 animate-[scale-in_0.5s_ease-out]">
-              You did it!
+        <div className="absolute inset-0 z-30 flex items-center justify-center backdrop-blur-sm bg-background/20 animate-fade-in">
+          <div className="text-center bg-white/95 backdrop-blur-xl rounded-3xl px-12 py-8 shadow-xl border border-border animate-scale-in">
+            <div className="text-6xl mb-4">✓</div>
+            <h2 className="font-fredoka text-3xl font-bold text-foreground">
+              Excellent
             </h2>
-            <p className="font-dm-sans text-2xl text-white/90 mt-4 animate-fade-in">
-              That was amazing! 🌟
-            </p>
-            {[...Array(30)].map((_, i) => (
-              <div
-                key={i}
-                className="absolute text-5xl animate-float"
-                style={{
-                  left: `${-20 + Math.random() * 140}%`,
-                  top: `${-20 + Math.random() * 140}%`,
-                  animationDelay: `${Math.random() * 0.8}s`,
-                  animationDuration: `${1.5 + Math.random()}s`,
-                }}
-              >
-                {['⭐', '✨', '🎉', '🌟', '💫', '🎊'][Math.floor(Math.random() * 6)]}
-              </div>
-            ))}
           </div>
         </div>
       )}

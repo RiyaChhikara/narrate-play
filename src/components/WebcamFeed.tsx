@@ -70,7 +70,13 @@ export const WebcamFeed = ({ isActive, requiredAction, requiredObject, enableSpe
   const backoffRef = useRef<number>(500);
   const isStartingRef = useRef<boolean>(false);
   const manuallyStoppedRef = useRef<boolean>(false);
+  const onObjectDetectedRef = useRef<WebcamFeedProps["onObjectDetected"] | null>(null);
   const animationFrameRef = useRef<number | null>(null);
+
+  // Keep latest callback without retriggering effects
+  useEffect(() => {
+    onObjectDetectedRef.current = onObjectDetected;
+  }, [onObjectDetected]);
   
   const [privacyMode, setPrivacyMode] = useState(false);
   const [detectionStatus, setDetectionStatus] = useState<string>("");
@@ -152,7 +158,7 @@ export const WebcamFeed = ({ isActive, requiredAction, requiredObject, enableSpe
       console.log("🗣️ Heard:", text);
       if (lastResult.isFinal) {
         console.log("✅ Final transcript:", text);
-        onObjectDetected?.(text.trim());
+        onObjectDetectedRef.current?.(text.trim());
       }
     };
 
@@ -213,7 +219,7 @@ export const WebcamFeed = ({ isActive, requiredAction, requiredObject, enableSpe
       recognition.onend = null;
       recognitionRef.current = null;
     };
-  }, [isActive, requiredAction, enableSpeech, onObjectDetected]);
+  }, [isActive, requiredAction, enableSpeech]);
 
   useEffect(() => {
     const initModels = async () => {

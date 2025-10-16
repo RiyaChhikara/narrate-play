@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { GestureRecognizer, FilesetResolver, DrawingUtils } from "@mediapipe/tasks-vision";
 import { Eye, EyeOff } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Confetti } from "@/components/Confetti";
 
 interface WebcamFeedProps {
   isActive: boolean;
@@ -49,10 +51,10 @@ export const WebcamFeed = ({ isActive, requiredAction, onGestureDetected, onSpee
             delegate: "GPU"
           },
           runningMode: "VIDEO",
-          numHands: 1,
-          minHandDetectionConfidence: 0.5,
-          minHandPresenceConfidence: 0.5,
-          minTrackingConfidence: 0.5
+          numHands: 2,
+          minHandDetectionConfidence: 0.3,
+          minHandPresenceConfidence: 0.3,
+          minTrackingConfidence: 0.3
         });
         
         gestureRecognizerRef.current = recognizer;
@@ -214,7 +216,7 @@ export const WebcamFeed = ({ isActive, requiredAction, onGestureDetected, onSpee
 
             setConfidence(conf);
 
-            if (recognizedGesture && conf > 0.7) {
+            if (recognizedGesture && conf > 0.55) {
               setDetectedGestureName(recognizedGesture);
               if (requiredAction && recognizedGesture === requiredAction) {
                 setDetectionStatus("correct");
@@ -245,7 +247,9 @@ export const WebcamFeed = ({ isActive, requiredAction, onGestureDetected, onSpee
       <div className={`relative rounded-2xl overflow-hidden shadow-2xl transition-all duration-500 h-full ${
         detectionStatus === 'correct' 
           ? 'border-8 border-green-500 shadow-[0_0_60px_rgba(34,197,94,0.9)] animate-pulse' 
-          : 'border-4 border-hero-orange shadow-[0_0_30px_rgba(255,140,66,0.4)]'
+          : handDetected
+            ? 'border-4 border-hero-orange/80 shadow-[0_0_30px_rgba(255,140,66,0.6)] animate-pulse'
+            : 'border-4 border-hero-orange shadow-[0_0_30px_rgba(255,140,66,0.4)]'
       }`}>
         {/* Video */}
         <video
@@ -263,6 +267,15 @@ export const WebcamFeed = ({ isActive, requiredAction, onGestureDetected, onSpee
           height={480}
           className="absolute top-0 left-0 w-full h-full transform scale-x-[-1]"
         />
+
+        {/* Hand placement guide (shown when awaiting gesture) */}
+        {requiredAction && !handDetected && (
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <div className="relative w-40 h-56 md:w-48 md:h-64 rounded-3xl border-2 border-dashed border-white/70 animate-pulse bg-black/10">
+              <div className="absolute inset-0 flex items-center justify-center text-6xl md:text-7xl opacity-70">👋</div>
+            </div>
+          </div>
+        )}
 
         {/* Privacy Mode Toggle */}
         <button
@@ -304,9 +317,11 @@ export const WebcamFeed = ({ isActive, requiredAction, onGestureDetected, onSpee
             </div>
           </div>
         )}
+        {/* Confetti celebration */}
+        <Confetti active={showSuccessAnimation} />
 
-        {/* Debug Overlay - Hidden in production, logged to console */}
-        {process.env.NODE_ENV === 'development' && (
+        {/* Debug Overlay intentionally hidden by default */}
+        {false && process.env.NODE_ENV === 'development' && (
           <div className="absolute top-12 left-2 bg-black/80 text-white px-3 py-2 rounded-lg text-xs font-mono">
             <div>Status: <span className="text-green-400">{detectionStatus || 'waiting'}</span></div>
             <div>Hand: <span className="text-yellow-400">{handDetected ? 'detected' : 'none'}</span></div>
@@ -324,16 +339,30 @@ export const WebcamFeed = ({ isActive, requiredAction, onGestureDetected, onSpee
           {/* Speech Recognition Status */}
           {isListening && (
             <div className="text-center mb-2">
-              <p className="text-blue-300 font-dm-sans text-xs font-bold animate-pulse">
+              <p className="text-blue-300 font-dm-sans text-sm font-bold animate-pulse">
                 🎤 Listening... {transcript && `"${transcript}"`}
               </p>
             </div>
           )}
+
+          {/* Skip button for demo backup */}
+          {requiredAction && (
+            <div className="flex justify-end">
+              <Button size="sm" variant="secondary" onClick={() => onGestureDetected(requiredAction!)}>
+                Skip Gesture
+              </Button>
+            </div>
+          )}
           
           {requiredAction && !handDetected && (
-            <p className="text-white font-dm-sans text-xs text-center animate-pulse">
-              Show me your hand! 🤚
-            </p>
+            <div className="text-center">
+              <p className="text-white font-fredoka text-base md:text-lg animate-pulse">
+                Show your hand to the camera! 👋
+              </p>
+              <p className="text-white/80 font-dm-sans text-[11px] md:text-xs mt-1">
+                Tip: Move closer and ensure your hand is well-lit.
+              </p>
+            </div>
           )}
           {requiredAction && handDetected && detectionStatus === "" && (
             <p className="text-white font-dm-sans text-xs text-center">

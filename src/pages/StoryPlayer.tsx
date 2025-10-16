@@ -327,7 +327,7 @@ const StoryPlayer = () => {
       </div>
 
       {/* Main Content Area - Split Layout */}
-      <div className="absolute inset-0 flex items-center justify-center p-8 pt-32 pb-64">
+      <div className="absolute inset-0 flex items-center justify-center p-8 pt-32 pb-80">
         <div className="flex gap-8 w-full max-w-7xl h-full max-h-[600px]">
           {/* Left side: Story prompt (60%) with enhanced animations */}
           {state === "action" && currentScene?.participation && (
@@ -398,7 +398,7 @@ const StoryPlayer = () => {
       </div>
 
       {/* Enhanced Progress Indicator - Visual Journey */}
-      <div className="absolute bottom-32 left-1/2 -translate-x-1/2 z-20">
+      <div className="absolute bottom-44 left-1/2 -translate-x-1/2 z-20">
         <div className="flex items-center gap-4 bg-white/90 backdrop-blur-md px-8 py-4 rounded-full shadow-2xl">
           {storyScenes.map((_, idx) => (
             <div key={idx} className="flex items-center">

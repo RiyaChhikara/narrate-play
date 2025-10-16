@@ -242,8 +242,10 @@ export const WebcamFeed = ({ isActive, requiredAction, onGestureDetected, onSpee
 
   return (
     <div className="relative w-full h-full">
-      <div className={`relative rounded-2xl overflow-hidden shadow-2xl transition-all duration-300 h-full ${
-        detectionStatus === 'correct' ? 'border-8 border-green-500 shadow-[0_0_40px_rgba(34,197,94,0.8)]' : 'border-4 border-hero-orange'
+      <div className={`relative rounded-2xl overflow-hidden shadow-2xl transition-all duration-500 h-full ${
+        detectionStatus === 'correct' 
+          ? 'border-8 border-green-500 shadow-[0_0_60px_rgba(34,197,94,0.9)] animate-pulse' 
+          : 'border-4 border-hero-orange shadow-[0_0_30px_rgba(255,140,66,0.4)]'
       }`}>
         {/* Video */}
         <video
@@ -303,17 +305,19 @@ export const WebcamFeed = ({ isActive, requiredAction, onGestureDetected, onSpee
           </div>
         )}
 
-        {/* Debug Overlay */}
-        <div className="absolute top-12 left-2 bg-black/80 text-white px-3 py-2 rounded-lg text-xs font-mono">
-          <div>Status: <span className="text-green-400">{detectionStatus || 'waiting'}</span></div>
-          <div>Hand: <span className="text-yellow-400">{handDetected ? 'detected' : 'none'}</span></div>
-          {detectedGestureName && (
-            <div>Gesture: <span className="text-blue-400">{detectedGestureName}</span></div>
-          )}
-          {confidence > 0 && (
-            <div>Conf: <span className="text-purple-400">{(confidence * 100).toFixed(0)}%</span></div>
-          )}
-        </div>
+        {/* Debug Overlay - Hidden in production, logged to console */}
+        {process.env.NODE_ENV === 'development' && (
+          <div className="absolute top-12 left-2 bg-black/80 text-white px-3 py-2 rounded-lg text-xs font-mono">
+            <div>Status: <span className="text-green-400">{detectionStatus || 'waiting'}</span></div>
+            <div>Hand: <span className="text-yellow-400">{handDetected ? 'detected' : 'none'}</span></div>
+            {detectedGestureName && (
+              <div>Gesture: <span className="text-blue-400">{detectedGestureName}</span></div>
+            )}
+            {confidence > 0 && (
+              <div>Conf: <span className="text-purple-400">{(confidence * 100).toFixed(0)}%</span></div>
+            )}
+          </div>
+        )}
 
         {/* Detection Status */}
         <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent px-3 py-3 space-y-1">

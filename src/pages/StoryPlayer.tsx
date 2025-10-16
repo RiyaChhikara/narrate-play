@@ -384,35 +384,50 @@ const StoryPlayer = () => {
           {/* Left side: Story prompt (60%) */}
           {state === "action" && currentScene?.participation && (
             <div className="flex-[0.6] flex items-center justify-center">
-              <div className="bg-white rounded-3xl px-12 py-10 shadow-[0_0_60px_rgba(255,140,66,0.6)] border-4 border-hero-orange text-center animate-[slide-in-bottom_0.5s_ease-out] max-w-2xl relative">
-                {/* Glowing border animation */}
-                <div className="absolute inset-0 rounded-3xl border-4 border-hero-orange animate-pulse opacity-50" />
-                
-                {/* Pulsing outer glow */}
-                <div className="absolute inset-0 rounded-3xl bg-hero-orange/20 animate-ping" style={{ animationDuration: '2s' }} />
-                
+              <div className="relative bg-white/95 backdrop-blur-xl rounded-3xl px-12 py-10 shadow-[0_8px_32px_rgba(0,0,0,0.15)] border-4 border-hero-orange text-center animate-[slide-in-bottom_0.5s_ease-out] max-w-2xl">
+                {/* Animated floating sparkles around card */}
+                {[...Array(6)].map((_, i) => (
+                  <div
+                    key={i}
+                    className="absolute text-3xl animate-float"
+                    style={{
+                      left: `${10 + Math.random() * 80}%`,
+                      top: `${-10 + Math.random() * 20}%`,
+                      animationDelay: `${Math.random() * 2}s`,
+                      animationDuration: `${2 + Math.random() * 2}s`,
+                    }}
+                  >
+                    ✨
+                  </div>
+                ))}
                 {currentScene.participation.type === 'gesture' ? (
                   <div className="relative z-10">
-                    <div className="text-8xl mb-4 animate-[bounce_1s_ease-in-out_infinite]">✨</div>
-                    <h2 className="font-fredoka text-4xl font-bold text-deep-navy mb-2">
+                    {/* Scene-specific illustration/emoji */}
+                    <div className="text-8xl mb-6 animate-[bounce_1s_ease-in-out_infinite] filter drop-shadow-lg">
+                      {sceneIndex === 0 ? '🌲' : sceneIndex === 1 ? '💎' : '🎉'}
+                    </div>
+                    <h2 className="font-fredoka text-5xl font-bold text-deep-navy mb-4 drop-shadow-sm">
                       {currentScene.participation.prompt}
                     </h2>
-                    <p className="font-dm-sans text-lg text-muted-foreground mb-2">
+                    <p className="font-dm-sans text-2xl text-muted-foreground mb-2">
                       Show me your move!
                     </p>
                   </div>
                 ) : (
                   <div className="relative z-10">
-                    <div className="text-8xl mb-4 animate-pulse">🎤</div>
-                    <h2 className="font-fredoka text-4xl font-bold text-deep-navy mb-2">
+                    {/* Scene-specific illustration/emoji */}
+                    <div className="text-8xl mb-6 animate-pulse filter drop-shadow-lg">
+                      {sceneIndex === 0 ? '🗣️' : sceneIndex === 1 ? '💭' : '🌟'}
+                    </div>
+                    <h2 className="font-fredoka text-5xl font-bold text-deep-navy mb-4 drop-shadow-sm">
                       {currentScene.participation.prompt}
                     </h2>
-                    <p className="font-dm-sans text-lg text-muted-foreground">
+                    <p className="font-dm-sans text-2xl text-muted-foreground">
                       Just say your answer out loud!
                     </p>
                     {userResponse && (
-                      <div className="mt-4 px-6 py-3 bg-green-100 rounded-lg border-2 border-green-500">
-                        <p className="font-fredoka text-xl text-green-700">
+                      <div className="mt-6 px-6 py-4 bg-green-100/90 backdrop-blur-sm rounded-2xl border-2 border-green-500 shadow-lg animate-scale-in">
+                        <p className="font-fredoka text-2xl text-green-700">
                           You said: "{userResponse}"
                         </p>
                       </div>
@@ -439,47 +454,63 @@ const StoryPlayer = () => {
       <ProgressPath currentScene={sceneIndex + 1} totalScenes={storyScenes.length} />
 
       {state === "success" && (
-        <div className="absolute inset-0 z-30 flex items-center justify-center bg-gradient-to-br from-green-400/30 via-blue-400/30 to-purple-400/30 backdrop-blur-md animate-fade-in">
+        <div className="absolute inset-0 z-30 flex items-center justify-center bg-gradient-to-br from-green-400/40 via-blue-400/40 to-purple-400/40 backdrop-blur-lg animate-fade-in">
           <div className="text-center relative">
-            <div className="text-9xl animate-[bounce_0.6s_ease-in-out_infinite]">🎉</div>
-            <h2 className="font-fredoka text-6xl font-bold text-white drop-shadow-[0_0_20px_rgba(255,255,255,0.8)] mt-4 animate-pulse">
+            <div className="text-[12rem] animate-[bounce_0.6s_ease-in-out_infinite] filter drop-shadow-2xl">🎉</div>
+            <h2 className="font-fredoka text-8xl font-bold text-white drop-shadow-[0_0_30px_rgba(255,255,255,0.9)] mt-6 animate-pulse">
               Amazing!
             </h2>
-            {[...Array(10)].map((_, i) => (
+            <p className="font-dm-sans text-3xl text-white/90 mt-4 drop-shadow-lg">
+              You did it perfectly!
+            </p>
+            {/* Floating celebration emojis */}
+            {[...Array(15)].map((_, i) => (
               <div
                 key={i}
-                className="absolute text-4xl animate-float"
+                className="absolute text-6xl animate-float"
                 style={{
-                  left: `${20 + Math.random() * 60}%`,
-                  top: `${20 + Math.random() * 60}%`,
+                  left: `${10 + Math.random() * 80}%`,
+                  top: `${10 + Math.random() * 80}%`,
                   animationDelay: `${Math.random() * 0.5}s`,
+                  animationDuration: `${2 + Math.random() * 2}s`,
                 }}
               >
-                {['⭐', '✨', '🎉', '🌟'][Math.floor(Math.random() * 4)]}
+                {['⭐', '✨', '🎉', '🌟', '💫'][Math.floor(Math.random() * 5)]}
               </div>
             ))}
           </div>
         </div>
       )}
 
-      {/* Story text with speaker indicator */}
-      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/70 to-transparent p-10 z-10">
-        <div className="max-w-4xl mx-auto">
-          <div className="flex items-start gap-4">
-            <div className="text-4xl">
-              {isPlayingAudio ? "🎭" : "📖"}
+      {/* Story narration with character avatar - Speech bubble style */}
+      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/95 via-black/85 to-transparent rounded-t-3xl p-8 pb-10 z-10 backdrop-blur-sm">
+        <div className="max-w-5xl mx-auto">
+          <div className="flex items-start gap-6">
+            {/* Character Avatar */}
+            <div className="flex-shrink-0">
+              <div className="w-20 h-20 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-5xl border-4 border-white/30 shadow-lg">
+                {isPlayingAudio ? "🎭" : "📖"}
+              </div>
             </div>
-            <div className="flex-1">
-              <p className="text-white font-dm-sans text-2xl leading-relaxed animate-fade-in drop-shadow-lg">
+            
+            {/* Speech Bubble */}
+            <div className="flex-1 bg-white/10 backdrop-blur-md rounded-2xl px-8 py-6 border-2 border-white/20 shadow-xl">
+              <p className="text-white font-dm-sans text-3xl leading-relaxed animate-fade-in drop-shadow-lg">
                 {narrationText || (currentScene ? "Listen to the story..." : "")}
               </p>
+              
+              {/* Animated waveform when audio plays */}
               {isPlayingAudio && (
-                <div className="mt-3 flex gap-1">
-                  {[...Array(3)].map((_, i) => (
+                <div className="mt-4 flex gap-2 items-end">
+                  {[...Array(8)].map((_, i) => (
                     <div
                       key={i}
-                      className="w-2 h-6 bg-hero-orange rounded-full animate-pulse"
-                      style={{ animationDelay: `${i * 0.15}s` }}
+                      className="w-2 bg-hero-orange rounded-full transition-all"
+                      style={{ 
+                        height: `${20 + Math.random() * 30}px`,
+                        animationDelay: `${i * 0.1}s`,
+                        animation: 'pulse 1s ease-in-out infinite'
+                      }}
                     />
                   ))}
                 </div>

@@ -45,8 +45,8 @@ export const SceneBackground = ({ sceneNumber }: { sceneNumber: number }) => {
         <div className="absolute inset-0 bg-gradient-to-br from-purple-900 via-blue-800 to-indigo-900 animate-pulse" />
       )}
 
-      {/* Dark overlay for better text readability */}
-      <div className={`absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-black/40 transition-opacity duration-1000 ${isAnimating ? 'opacity-100' : 'opacity-80'}`} />
+      {/* Dark overlay with blur for better text readability and depth */}
+      <div className={`absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-black/50 backdrop-blur-[2px] transition-opacity duration-1000 ${isAnimating ? 'opacity-100' : 'opacity-90'}`} />
       
       {/* Floating sparkles */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">

@@ -9,6 +9,8 @@ interface Scene {
   narration: string;
   hasJoinPoint: boolean;
   requiredAction?: string;
+  requiredObject?: string;
+  requiresBoth?: boolean;
 }
 
 type StoryState = "passive" | "action" | "success";
@@ -21,14 +23,28 @@ const scenes: Scene[] = [
     requiredAction: "wave",
   },
   {
-    text: "The hero discovered a mysterious golden path that glowed in the moonlight. With courage in their heart, they decided to follow it.",
-    narration: "The hero discovered a mysterious golden path that glowed in the moonlight. With courage in their heart, they decided to follow it.",
+    text: "The hero discovered a mysterious book lying on the forest floor. It glowed with ancient magic!",
+    narration: "The hero discovered a mysterious book lying on the forest floor. It glowed with ancient magic!",
     hasJoinPoint: true,
-    requiredAction: "point",
+    requiredObject: "book",
   },
   {
-    text: "At the end of the path, they found a treasure chest filled with magical crystals. The hero had completed their quest!",
-    narration: "At the end of the path, they found a treasure chest filled with magical crystals. The hero had completed their quest!",
+    text: "With the magic book in hand, the hero pointed toward a golden path that appeared before them!",
+    narration: "With the magic book in hand, the hero pointed toward a golden path that appeared before them!",
+    hasJoinPoint: true,
+    requiredAction: "point",
+    requiredObject: "book",
+    requiresBoth: true,
+  },
+  {
+    text: "At the end of the path, they found a treasure chest filled with magical crystals! The hero gave a big thumbs up!",
+    narration: "At the end of the path, they found a treasure chest filled with magical crystals! The hero gave a big thumbs up!",
+    hasJoinPoint: true,
+    requiredAction: "thumbsup",
+  },
+  {
+    text: "The hero had completed their magical quest! The forest celebrated with fireworks and joy!",
+    narration: "The hero had completed their magical quest! The forest celebrated with fireworks and joy!",
     hasJoinPoint: false,
   },
 ];
@@ -41,6 +57,8 @@ const StoryPlayer = () => {
   const [sceneIndex, setSceneIndex] = useState(0);
   const [showSettings, setShowSettings] = useState(false);
   const [narrationText, setNarrationText] = useState("");
+  const [gestureDetected, setGestureDetected] = useState(false);
+  const [objectDetected, setObjectDetected] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const currentScene = scenes[sceneIndex];
@@ -49,52 +67,96 @@ const StoryPlayer = () => {
     if (currentScene.hasJoinPoint) {
       const timer = setTimeout(() => {
         setState("action");
+        setGestureDetected(false);
+        setObjectDetected(false);
       }, 3000);
       return () => clearTimeout(timer);
     }
   }, [sceneIndex, currentScene.hasJoinPoint]);
 
+  const checkSceneCompletion = () => {
+    if (currentScene.requiresBoth) {
+      return gestureDetected && objectDetected;
+    } else if (currentScene.requiredObject) {
+      return objectDetected;
+    } else if (currentScene.requiredAction) {
+      return gestureDetected;
+    }
+    return false;
+  };
+
+  useEffect(() => {
+    if (state === "action" && checkSceneCompletion()) {
+      handleSceneComplete();
+    }
+  }, [gestureDetected, objectDetected, state]);
+
   const handleGestureDetected = async (gesture: string) => {
     if (gesture === currentScene.requiredAction && state === "action") {
-      setState("success");
+      setGestureDetected(true);
       
-      // Show success toast
       toast({
-        title: "🎉 Amazing!",
-        description: `Perfect ${gesture}! You're doing great!`,
+        title: "🎉 Great gesture!",
+        description: `Perfect ${gesture}!`,
       });
-
-      // Wait for celebration
-      setTimeout(async () => {
-        if (sceneIndex < scenes.length - 1) {
-          setSceneIndex(sceneIndex + 1);
-          setState("passive");
-          
-          // Generate conversational response
-          await generateConversationalResponse(gesture);
-        } else {
-          toast({
-            title: "🌟 Story Complete!",
-            description: "You did all the actions! You're a star!",
-          });
-          setTimeout(() => navigate("/stories"), 2000);
-        }
-      }, 1500);
     }
   };
 
-  const generateConversationalResponse = async (gesture: string) => {
-    // Placeholder for AI integration
+  const handleObjectDetected = async (object: string) => {
+    if (state === "action" && !objectDetected) {
+      setObjectDetected(true);
+      
+      toast({
+        title: "✨ Found it!",
+        description: `You found the ${object}!`,
+      });
+    }
+  };
+
+  const handleSceneComplete = () => {
+    setState("success");
+
+    const successMessage = currentScene.requiresBoth
+      ? "Amazing! You did both the gesture AND found the object!"
+      : currentScene.requiredObject
+      ? `You found the ${currentScene.requiredObject}!`
+      : `Perfect ${currentScene.requiredAction}!`;
+
+    toast({
+      title: "🌟 Incredible!",
+      description: successMessage,
+    });
+
+    // Wait for celebration
+    setTimeout(async () => {
+      if (sceneIndex < scenes.length - 1) {
+        setSceneIndex(sceneIndex + 1);
+        setState("passive");
+        setGestureDetected(false);
+        setObjectDetected(false);
+        
+        await generateConversationalResponse();
+      } else {
+        toast({
+          title: "🎊 Story Complete!",
+          description: "You completed the magical quest! You're a star!",
+        });
+        setTimeout(() => navigate("/stories"), 2000);
+      }
+    }, 2000);
+  };
+
+  const generateConversationalResponse = async () => {
     const responses = [
-      `Oh wow! I saw you ${gesture}! You're really good at that!`,
-      `That was a great ${gesture}! The hero felt so encouraged!`,
-      `You did that so fast! Your ${gesture} was perfect!`,
+      "Oh wow! You're doing so well! Let's see what happens next!",
+      "That was amazing! The story continues...",
+      "You're a natural! Ready for the next part?",
     ];
     
     const response = responses[Math.floor(Math.random() * responses.length)];
     setNarrationText(response);
     
-    // Future: Call OpenAI/ElevenLabs here
+    // Future: Call AI TTS here
   };
 
   const getActionEmoji = (action?: string) => {
@@ -108,12 +170,33 @@ const StoryPlayer = () => {
     return action ? emojiMap[action] || "✨" : "✨";
   };
 
+  const getObjectEmoji = (object?: string) => {
+    const emojiMap: Record<string, string> = {
+      book: "📖",
+      cup: "☕",
+      bottle: "🍼",
+      "teddy bear": "🧸",
+      apple: "🍎",
+      chair: "🪑",
+      bed: "🛏️",
+      clock: "⏰",
+      "cell phone": "📱",
+    };
+    return object ? (emojiMap[object.toLowerCase()] || "📦") : "📦";
+  };
+
   const getStateBadge = () => {
     switch (state) {
       case "passive":
         return "📖 Listening to story...";
       case "action":
-        return `✨ Your turn!`;
+        if (currentScene.requiresBoth) {
+          return `✨ Do ${currentScene.requiredAction} AND find ${currentScene.requiredObject}!`;
+        } else if (currentScene.requiredObject) {
+          return `🔍 Find the ${currentScene.requiredObject}!`;
+        } else {
+          return `✨ Your turn!`;
+        }
       case "success":
         return "🎉 Amazing! Well done!";
       default:
@@ -163,8 +246,8 @@ const StoryPlayer = () => {
         </span>
       </div>
 
-      <div className="absolute top-6 left-1/2 -translate-x-1/2 bg-white px-8 py-4 rounded-2xl shadow-2xl z-20 border-4 border-hero-orange">
-        <span className="font-fredoka text-xl font-bold text-deep-navy">
+      <div className="absolute top-6 left-1/2 -translate-x-1/2 bg-white px-8 py-4 rounded-2xl shadow-2xl z-20 border-4 border-hero-orange max-w-xl">
+        <span className="font-fredoka text-lg font-bold text-deep-navy text-center block">
           {getStateBadge()}
         </span>
       </div>
@@ -172,7 +255,9 @@ const StoryPlayer = () => {
       <WebcamFeed 
         isActive={state === "action"} 
         requiredAction={currentScene.requiredAction}
+        requiredObject={currentScene.requiredObject}
         onGestureDetected={handleGestureDetected}
+        onObjectDetected={handleObjectDetected}
       />
 
       {/* Progress dots */}
@@ -194,18 +279,63 @@ const StoryPlayer = () => {
       {state === "action" && (
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 flex flex-col items-center gap-6">
           <div className="bg-white rounded-3xl px-12 py-10 shadow-[0_0_40px_rgba(255,140,66,0.4)] border-4 border-hero-orange text-center animate-scale-in">
-            <div className="text-8xl mb-4 animate-bounce">
-              {getActionEmoji(currentScene.requiredAction)}
-            </div>
-            <h2 className="font-fredoka text-4xl font-bold text-deep-navy mb-2">
-              {currentScene.requiredAction?.toUpperCase()}
-            </h2>
-            <p className="font-dm-sans text-lg text-muted-foreground mb-2">
-              Try moving your hand!
-            </p>
-            <p className="font-dm-sans text-sm text-muted-foreground/70">
-              The story continues when you do it! ✨
-            </p>
+            {currentScene.requiresBoth ? (
+              <>
+                <div className="flex gap-8 justify-center mb-4">
+                  <div className="text-6xl animate-bounce">
+                    {getActionEmoji(currentScene.requiredAction)}
+                  </div>
+                  <div className="text-4xl font-bold self-center">+</div>
+                  <div className="text-6xl animate-bounce" style={{ animationDelay: '0.2s' }}>
+                    {getObjectEmoji(currentScene.requiredObject)}
+                  </div>
+                </div>
+                <h2 className="font-fredoka text-3xl font-bold text-deep-navy mb-2">
+                  {currentScene.requiredAction?.toUpperCase()} + FIND {currentScene.requiredObject?.toUpperCase()}
+                </h2>
+                <p className="font-dm-sans text-base text-muted-foreground mb-2">
+                  Do the gesture while showing the object!
+                </p>
+                <div className="flex gap-4 justify-center mt-3">
+                  <div className={`px-3 py-1 rounded-full text-sm ${gestureDetected ? 'bg-green-500 text-white' : 'bg-gray-200'}`}>
+                    {gestureDetected ? '✓' : '○'} Gesture
+                  </div>
+                  <div className={`px-3 py-1 rounded-full text-sm ${objectDetected ? 'bg-green-500 text-white' : 'bg-gray-200'}`}>
+                    {objectDetected ? '✓' : '○'} Object
+                  </div>
+                </div>
+              </>
+            ) : currentScene.requiredObject ? (
+              <>
+                <div className="text-8xl mb-4 animate-bounce">
+                  {getObjectEmoji(currentScene.requiredObject)}
+                </div>
+                <h2 className="font-fredoka text-4xl font-bold text-deep-navy mb-2">
+                  FIND A {currentScene.requiredObject?.toUpperCase()}
+                </h2>
+                <p className="font-dm-sans text-lg text-muted-foreground mb-2">
+                  Look around your room!
+                </p>
+                <p className="font-dm-sans text-sm text-muted-foreground/70">
+                  Show it to the camera! 📹✨
+                </p>
+              </>
+            ) : (
+              <>
+                <div className="text-8xl mb-4 animate-bounce">
+                  {getActionEmoji(currentScene.requiredAction)}
+                </div>
+                <h2 className="font-fredoka text-4xl font-bold text-deep-navy mb-2">
+                  {currentScene.requiredAction?.toUpperCase()}
+                </h2>
+                <p className="font-dm-sans text-lg text-muted-foreground mb-2">
+                  Try moving your hand!
+                </p>
+                <p className="font-dm-sans text-sm text-muted-foreground/70">
+                  The story continues when you do it! ✨
+                </p>
+              </>
+            )}
           </div>
         </div>
       )}
@@ -271,16 +401,30 @@ const StoryPlayer = () => {
               </div>
             </div>
 
-            {/* Learning Goals */}
+            {/* What We Detect */}
             <div className="border-l-4 border-hero-orange pl-4">
-              <h3 className="font-fredoka text-lg font-bold text-deep-navy mb-3">🎯 Learning Goals</h3>
-              <div className="space-y-2">
-                {['wave', 'point', 'thumbsup', 'peace'].map((action) => (
-                  <label key={action} className="flex items-center gap-2 text-sm font-dm-sans">
-                    <input type="checkbox" className="rounded" defaultChecked />
-                    <span className="capitalize">{action}</span>
-                  </label>
-                ))}
+              <h3 className="font-fredoka text-lg font-bold text-deep-navy mb-3">🎯 What We Detect</h3>
+              <div className="space-y-3">
+                <div>
+                  <p className="font-dm-sans text-sm font-semibold mb-1">Gestures:</p>
+                  <div className="flex flex-wrap gap-1">
+                    {['wave', 'point', 'thumbsup', 'peace', 'clap'].map((action) => (
+                      <span key={action} className="text-xs bg-purple-100 px-2 py-1 rounded">
+                        {action}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <p className="font-dm-sans text-sm font-semibold mb-1">Objects:</p>
+                  <div className="flex flex-wrap gap-1 text-xs">
+                    {['book', 'cup', 'teddy bear', 'apple', 'chair', 'cell phone'].map((obj) => (
+                      <span key={obj} className="bg-yellow-100 px-2 py-1 rounded">
+                        {obj}
+                      </span>
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
 

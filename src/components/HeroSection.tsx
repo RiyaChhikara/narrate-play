@@ -53,48 +53,48 @@ const HeroSection = () => {
 
       <div className="absolute top-0 left-0 bottom-0 w-1/2 bg-gradient-to-r from-deep-navy/80 to-transparent pointer-events-none" />
 
-      <div className="absolute left-0 top-1/2 -translate-y-1/2 pl-20 max-w-2xl z-10">
-        <h1 className="font-fredoka text-5xl md:text-6xl font-bold text-off-white leading-tight tracking-wide drop-shadow-[0_4px_12px_rgba(0,0,0,0.8)]">
+      <div className="absolute left-0 top-1/2 -translate-y-1/2 pl-8 sm:pl-12 md:pl-16 lg:pl-20 max-w-xl lg:max-w-2xl z-10">
+        <h1 className="font-fredoka text-4xl sm:text-5xl lg:text-6xl font-bold text-off-white leading-tight tracking-wide drop-shadow-[0_4px_16px_rgba(0,0,0,0.9)] mb-6">
           Stories That Come Alive
         </h1>
         
-        <p className="font-dm-sans text-2xl text-off-white mt-6 drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)] font-semibold">
+        <p className="font-dm-sans text-xl sm:text-2xl text-off-white drop-shadow-[0_2px_10px_rgba(0,0,0,0.7)] font-medium mb-8">
           Your voice. Your hero.
         </p>
 
         {/* Value Proposition Panel */}
-        <div className="mt-8 bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20">
-          <p className="font-dm-sans text-lg text-off-white mb-4 font-semibold">
-            Interactive speech therapy for neurodivergent children
+        <div className="mt-8 bg-white/95 backdrop-blur-xl rounded-3xl p-8 border border-white/30 shadow-[0_8px_32px_rgba(0,0,0,0.3)] transition-all duration-300 hover:shadow-[0_12px_48px_rgba(0,0,0,0.4)]">
+          <p className="font-dm-sans text-lg text-deep-navy mb-5 font-semibold">
+            Interactive speech therapy for kids
           </p>
-          <div className="space-y-2">
-            <div className="flex items-start gap-3">
-              <span className="text-xl">🗣️</span>
-              <p className="font-dm-sans text-off-white/90">Practice words through storytelling</p>
+          <div className="space-y-3">
+            <div className="flex items-start gap-4">
+              <span className="text-2xl">🗣️</span>
+              <p className="font-dm-sans text-deep-navy/80 text-base leading-relaxed">Practice words through storytelling</p>
             </div>
-            <div className="flex items-start gap-3">
-              <span className="text-xl">🤲</span>
-              <p className="font-dm-sans text-off-white/90">Learn through physical gestures</p>
+            <div className="flex items-start gap-4">
+              <span className="text-2xl">🤲</span>
+              <p className="font-dm-sans text-deep-navy/80 text-base leading-relaxed">Learn through physical gestures</p>
             </div>
-            <div className="flex items-start gap-3">
-              <span className="text-xl">👀</span>
-              <p className="font-dm-sans text-off-white/90">Engage multiple senses</p>
+            <div className="flex items-start gap-4">
+              <span className="text-2xl">👀</span>
+              <p className="font-dm-sans text-deep-navy/80 text-base leading-relaxed">Engage multiple senses</p>
             </div>
-            <div className="flex items-start gap-3">
-              <span className="text-xl">❤️</span>
-              <p className="font-dm-sans text-off-white/90">Told in your family's voice</p>
+            <div className="flex items-start gap-4">
+              <span className="text-2xl">❤️</span>
+              <p className="font-dm-sans text-deep-navy/80 text-base leading-relaxed">Told in your family's voice</p>
             </div>
           </div>
         </div>
 
-        <p className="font-dm-sans text-sm text-off-white/90 mt-6 drop-shadow-[0_2px_6px_rgba(0,0,0,0.6)] font-semibold">
-          Ages 4-7 • Multilingual • For neurodivergent children
+        <p className="font-dm-sans text-sm text-off-white/95 mt-8 drop-shadow-[0_2px_8px_rgba(0,0,0,0.7)] font-medium tracking-wide">
+          Ages 4-7 • Multilingual
         </p>
 
         <Button 
           size="lg"
           onClick={() => navigate("/stories")}
-          className="bg-hero-orange hover:bg-hero-orange/90 text-off-white px-10 py-6 rounded-full font-fredoka text-xl font-semibold hover:scale-105 transition-all duration-300 shadow-2xl mt-8"
+          className="bg-hero-orange hover:bg-hero-orange/90 text-white px-12 py-6 rounded-full font-fredoka text-xl font-semibold hover:scale-105 transition-all duration-300 shadow-[0_8px_24px_rgba(255,140,66,0.5)] hover:shadow-[0_12px_32px_rgba(255,140,66,0.7)] mt-10"
         >
           Start Your Adventure →
         </Button>

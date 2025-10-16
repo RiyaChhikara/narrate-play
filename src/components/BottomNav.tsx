@@ -14,8 +14,8 @@ const BottomNav = () => {
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-white shadow-lg z-50 border-t border-border">
-      <div className="flex items-center justify-around py-4 px-6">
+    <nav className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-xl shadow-[0_-4px_24px_rgba(0,0,0,0.1)] z-50 border-t border-border/50">
+      <div className="flex items-center justify-around py-3 px-4 max-w-md mx-auto">
         {navItems.map((item) => {
           const Icon = item.icon;
           const active = isActive(item.path);
@@ -24,14 +24,14 @@ const BottomNav = () => {
             <button
               key={item.path}
               onClick={() => navigate(item.path)}
-              className={`flex flex-col items-center gap-1 transition-all duration-200 ${
-                active ? "text-hero-orange" : "text-muted-foreground"
+              className={`flex flex-col items-center gap-1.5 px-6 py-2 rounded-2xl transition-all duration-300 ${
+                active ? "bg-hero-orange/10 text-hero-orange" : "text-muted-foreground hover:bg-muted/50"
               }`}
             >
-              <div className={`relative ${active ? "border-t-4 border-hero-orange pt-1" : ""}`}>
-                <Icon className="w-6 h-6" />
-              </div>
-              <span className="font-dm-sans text-xs font-medium">{item.label}</span>
+              <Icon className={`transition-all duration-300 ${active ? "w-6 h-6" : "w-5 h-5"}`} />
+              <span className={`font-dm-sans text-xs transition-all duration-300 ${active ? "font-semibold" : "font-medium"}`}>
+                {item.label}
+              </span>
             </button>
           );
         })}

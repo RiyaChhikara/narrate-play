@@ -12,29 +12,50 @@ serve(async (req) => {
   }
 
   try {
-    const { targetWords, gestures, childName } = await req.json();
+    const { targetWords, gestures, childName, languages = ["en"] } = await req.json();
 
     const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
     if (!openAIApiKey) {
       throw new Error('OPENAI_API_KEY not configured');
     }
 
-    const storyPrompt = `Create an interactive children's story script with these specifications:
+    const languageNames = languages.map((code: string) => {
+      const langMap: Record<string, string> = {
+        en: "English", hi: "Hindi", es: "Spanish", fr: "French", de: "German",
+        it: "Italian", pt: "Portuguese", zh: "Mandarin", ja: "Japanese", ko: "Korean"
+      };
+      return langMap[code] || code;
+    });
 
-TARGET WORDS: ${targetWords.join(', ')}
-GESTURES: ${gestures.join(', ')}
+    const storyPrompt = `Create an interactive multilingual children's story with code-switching.
+
+LANGUAGES: The child speaks ${languageNames.join(' and ')}
+INSTRUCTIONS FOR MULTILINGUAL STORYTELLING:
+- Mix languages naturally (code-switching)
+- Use English for main narration
+- Use ${languageNames[1] || languageNames[0]} for key "Magic Words" and character dialogue
+- Repeat important words in both languages
+- Example: "The hero found a KHAZANA (treasure)! Can you say KHAZANA?"
+
+TARGET MAGIC WORDS: ${targetWords.join(', ')}
+These words MUST appear in the story. Use them in both languages with translation.
+
+GESTURES/ACTIONS: ${gestures.join(', ')}
+The story should prompt these physical actions only.
+
 CHILD'S NAME: ${childName || 'the brave hero'}
 
 Create a magical adventure story with 5 scenes. Each scene should:
 1. Have dialogue between 2-3 characters (Mom/Parent, Dad/Friend, Narrator)
 2. Include ONE participation moment where the child gets to interact
 3. Be 30-60 seconds of dialogue
-4. Naturally incorporate one target word
+4. Naturally incorporate one target word in both languages
 5. Build excitement and encourage the child
+6. Code-switch naturally between languages
 
 Participation types to rotate:
 - CHOICE: Ask child to choose (color, direction, object)
-- WORD: Have characters say a target word, pause for child to repeat
+- WORD: Have characters say a target word in both languages, pause for child to repeat
 - GESTURE: Ask child to do a physical action
 - OBJECT: Ask child to find and show an object
 

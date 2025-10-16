@@ -115,7 +115,8 @@ export const useStoryGeneration = () => {
     targetWords: string[],
     gestures: string[],
     childName?: string,
-    useDemoMode: boolean = false
+    useDemoMode: boolean = false,
+    languages?: string[]
   ): Promise<Story | null> => {
     setIsLoading(true);
     setError(null);
@@ -136,7 +137,7 @@ export const useStoryGeneration = () => {
       );
 
       const generatePromise = supabase.functions.invoke('generate-story', {
-        body: { targetWords, gestures, childName }
+        body: { targetWords, gestures, childName, languages }
       });
 
       const { data, error: functionError } = await Promise.race([

@@ -1,8 +1,11 @@
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Clock, Star } from "lucide-react";
+import { ArrowLeft, Clock, Star, Sparkles } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import BottomNav from "@/components/BottomNav";
+import { useStoryGeneration } from "@/hooks/useStoryGeneration";
+import { toast } from "sonner";
 
 interface Story {
   id: string;
@@ -42,6 +45,28 @@ const stories: Story[] = [
 
 const Stories = () => {
   const navigate = useNavigate();
+  const { generateStory, isLoading } = useStoryGeneration();
+
+  const handleGenerateStory = async () => {
+    try {
+      // Get settings from localStorage
+      const selectedLanguages = JSON.parse(localStorage.getItem("selectedLanguages") || '["en"]');
+      const words = JSON.parse(localStorage.getItem("words") || '["TREASURE", "CRYSTAL"]');
+      const actions = JSON.parse(localStorage.getItem("selectedActions") || '["wave", "point"]');
+      
+      toast.loading("Creating your magical story...");
+      
+      const story = await generateStory(words, actions, "Hero", false, selectedLanguages);
+      
+      if (story) {
+        toast.success("Story created! 🎉");
+        // Navigate to story player with generated story
+        navigate("/story/generated", { state: { story } });
+      }
+    } catch (error) {
+      toast.error("Failed to create story. Please try again.");
+    }
+  };
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
@@ -67,6 +92,17 @@ const Stories = () => {
             <ArrowLeft className="w-6 h-6 text-white" />
           </button>
           <h1 className="font-fredoka text-4xl font-bold text-off-white">Your Stories</h1>
+        </div>
+
+        <div className="mb-8 w-full max-w-2xl mx-auto">
+          <Button
+            onClick={handleGenerateStory}
+            disabled={isLoading}
+            className="w-full bg-hero-orange hover:bg-hero-orange/90 text-white font-fredoka text-xl py-6 rounded-2xl shadow-lg"
+          >
+            <Sparkles className="w-6 h-6 mr-2" />
+            {isLoading ? "Creating Magic..." : "Generate New Story"}
+          </Button>
         </div>
 
         <div className="space-y-8">

@@ -26,6 +26,7 @@ const StoryPlayer = () => {
   const [storyScenes, setStoryScenes] = useState<StoryScene[]>([]);
   const [isGeneratingStory, setIsGeneratingStory] = useState(true);
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
+  const [canListen, setCanListen] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -82,6 +83,7 @@ const StoryPlayer = () => {
       setState("passive");
       setGestureDetected(false);
       setSpeechDetected(false);
+      setCanListen(false);
 
       try {
         console.log(`Playing scene ${sceneIndex + 1} narration`);
@@ -115,6 +117,11 @@ const StoryPlayer = () => {
           if (promptAudio) {
             setNarrationText(currentScene.participation.prompt);
             await playAudioFromBase64(promptAudio);
+          }
+          
+          const type = currentScene.participation.type;
+          if (type === 'word' || type === 'choice') {
+            setCanListen(true); // Start listening only after prompt is finished
           }
           
           console.log('Now waiting for user response...');
@@ -408,6 +415,7 @@ const StoryPlayer = () => {
               isActive={state === "action"} 
               requiredAction={currentScene?.participation?.type === 'gesture' ? currentScene.participation.expectedResponses?.[0] : undefined}
               requiredObject={undefined}
+              enableSpeech={canListen}
               onGestureDetected={handleGestureDetected}
               onObjectDetected={handleSpeechDetected}
             />

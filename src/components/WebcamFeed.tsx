@@ -46,6 +46,7 @@ interface WebcamFeedProps {
   isActive: boolean;
   requiredAction?: string;
   requiredObject?: string;
+  enableSpeech?: boolean;
   onGestureDetected: (gesture: string) => void;
   onObjectDetected: (object: string) => void;
 }
@@ -58,7 +59,7 @@ const GESTURE_MAP: Record<string, string> = {
   "Victory": "peace",
 };
 
-export const WebcamFeed = ({ isActive, requiredAction, requiredObject, onGestureDetected, onObjectDetected }: WebcamFeedProps) => {
+export const WebcamFeed = ({ isActive, requiredAction, requiredObject, enableSpeech, onGestureDetected, onObjectDetected }: WebcamFeedProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -80,10 +81,16 @@ export const WebcamFeed = ({ isActive, requiredAction, requiredObject, onGesture
 
   // Initialize speech recognition
   useEffect(() => {
-    if (!isActive || requiredAction) return; // Only activate for speech tasks
-
+    // Only listen during speech tasks when explicitly enabled
+    if (!isActive || requiredAction || !enableSpeech) {
+      if (recognitionRef.current) {
+        try { recognitionRef.current.stop(); } catch {}
+        recognitionRef.current = null;
+      }
+      setIsListening(false);
+      return;
+    }
     const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
-    
     if (!SpeechRecognitionAPI) {
       console.error("Speech recognition not supported");
       return;
@@ -160,7 +167,7 @@ export const WebcamFeed = ({ isActive, requiredAction, requiredObject, onGesture
       }
       setIsListening(false);
     };
-  }, [isActive, requiredAction, onObjectDetected]);
+  }, [isActive, requiredAction, enableSpeech, onObjectDetected]);
 
   useEffect(() => {
     const initModels = async () => {

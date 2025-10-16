@@ -54,16 +54,16 @@ const HeroSection = () => {
       <div className="absolute top-0 left-0 bottom-0 w-1/2 bg-gradient-to-r from-deep-navy/80 to-transparent pointer-events-none" />
 
       <div className="absolute left-0 top-1/2 -translate-y-1/2 pl-20 max-w-xl z-10">
-        <h1 className="font-fredoka text-5xl md:text-6xl font-bold text-off-white leading-tight tracking-wide drop-shadow-lg">
+        <h1 className="font-fredoka text-5xl md:text-6xl font-bold text-off-white leading-tight tracking-wide drop-shadow-[0_4px_12px_rgba(0,0,0,0.8)]">
           Stories That Come Alive
         </h1>
         
-        <p className="font-dm-sans text-lg md:text-xl text-off-white/90 mt-6">
+        <p className="font-dm-sans text-lg md:text-xl text-off-white mt-6 drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]">
           Your voice. Your hero.
         </p>
 
-        <p className="font-dm-sans text-sm text-off-white/70 mt-6">
-          Ages 4-7 • Multilingual
+        <p className="font-dm-sans text-sm text-off-white/90 mt-6 drop-shadow-[0_2px_6px_rgba(0,0,0,0.6)]">
+          Ages 4-7 • Multilingual • For neurodivergent children
         </p>
 
         <Button 

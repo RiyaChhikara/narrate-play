@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
+import { WebcamFeed } from "@/components/WebcamFeed";
 
 interface Scene {
   text: string;
@@ -60,12 +61,23 @@ const StoryPlayer = () => {
     }, 2000);
   };
 
+  const getActionEmoji = (action?: string) => {
+    const emojiMap: Record<string, string> = {
+      wave: "👋",
+      point: "☝️",
+      clap: "👏",
+      jump: "🦘",
+      thumbsup: "👍",
+    };
+    return action ? emojiMap[action] || "✨" : "✨";
+  };
+
   const getStateBadge = () => {
     switch (state) {
       case "passive":
         return "📖 Listening to story...";
       case "action":
-        return `✨ Your turn! ${currentScene.requiredAction?.toUpperCase()}`;
+        return `✨ Your turn!`;
       case "success":
         return "🎉 Amazing! Well done!";
       default:
@@ -77,36 +89,50 @@ const StoryPlayer = () => {
     <div className="min-h-screen bg-gradient-to-br from-purple-600 to-blue-800 relative">
       <button
         onClick={() => navigate("/stories")}
-        className="absolute top-6 left-6 bg-black/50 rounded-full p-3 hover:bg-black/70 transition-all duration-200 z-20"
+        className="absolute top-6 left-6 bg-black/70 rounded-full p-3 hover:bg-black/90 transition-all duration-200 z-20 backdrop-blur-sm"
       >
         <ArrowLeft className="w-6 h-6 text-white" />
       </button>
 
-      <div className="absolute top-6 right-6 bg-black/60 px-4 py-2 rounded-full z-20">
-        <span className="text-white font-dm-sans text-sm">
+      <div className="absolute top-6 right-6 bg-black/70 backdrop-blur-sm px-5 py-3 rounded-full z-20 shadow-lg">
+        <span className="text-white font-dm-sans text-sm font-semibold">
           Scene {sceneIndex + 1}/{scenes.length}
         </span>
       </div>
 
-      <div className="absolute top-6 left-1/2 -translate-x-1/2 bg-white/90 px-8 py-4 rounded-full shadow-xl z-20">
-        <span className="font-fredoka text-xl font-bold text-black">
+      <div className="absolute top-6 left-1/2 -translate-x-1/2 bg-white px-8 py-4 rounded-2xl shadow-2xl z-20 border-4 border-hero-orange">
+        <span className="font-fredoka text-xl font-bold text-deep-navy">
           {getStateBadge()}
         </span>
       </div>
 
+      <WebcamFeed isActive={state === "action"} />
+
       {state === "action" && (
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 flex flex-col items-center gap-6">
+          <div className="bg-white rounded-3xl px-12 py-10 shadow-2xl border-4 border-hero-orange text-center">
+            <div className="text-8xl mb-4 animate-float">
+              {getActionEmoji(currentScene.requiredAction)}
+            </div>
+            <h2 className="font-fredoka text-4xl font-bold text-deep-navy mb-2">
+              {currentScene.requiredAction?.toUpperCase()}
+            </h2>
+            <p className="font-dm-sans text-lg text-muted-foreground">
+              Try it now!
+            </p>
+          </div>
+          
           <button
             onClick={handleActionComplete}
-            className="bg-hero-orange hover:bg-hero-orange/90 text-white px-12 py-8 rounded-full font-fredoka text-2xl font-bold shadow-2xl hover:scale-105 transition-all duration-300"
+            className="bg-hero-orange hover:bg-hero-orange/90 text-white px-8 py-4 rounded-full font-dm-sans text-base font-medium shadow-xl hover:scale-105 transition-all duration-300"
           >
-            Tap to Continue
+            Continue Story
           </button>
         </div>
       )}
 
-      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent p-10 z-10">
-        <p className="text-white font-dm-sans text-2xl leading-relaxed text-center animate-fade-in">
+      <div className="absolute bottom-0 left-0 right-0 bg-black/80 backdrop-blur-sm p-10 z-10">
+        <p className="text-white font-dm-sans text-2xl leading-relaxed text-center animate-fade-in drop-shadow-lg">
           {currentScene.text}
         </p>
       </div>

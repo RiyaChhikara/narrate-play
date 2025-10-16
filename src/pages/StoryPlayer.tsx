@@ -320,8 +320,7 @@ const StoryPlayer = () => {
       {/* Scene Background */}
       <SceneBackground sceneNumber={sceneIndex} totalScenes={storyScenes.length} />
       
-      {/* Confetti on Success */}
-      {showConfetti && <ConfettiCanvas />}
+      {/* Confetti removed - too stimulating */}
 
       {/* Back button */}
       <button

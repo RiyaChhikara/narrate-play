@@ -91,7 +91,6 @@ Make it magical, encouraging, and full of wonder. Characters should celebrate th
             content: storyPrompt
           }
         ],
-        temperature: 0.8,
         max_completion_tokens: 2000,
       }),
     });

@@ -51,7 +51,7 @@ const HeroSection = () => {
         />
       </video>
 
-      <div className="absolute top-0 left-0 bottom-0 w-1/2 bg-gradient-to-r from-deep-navy/80 to-transparent pointer-events-none" />
+      <div className="absolute top-0 left-0 bottom-0 w-2/3 md:w-1/2 bg-gradient-to-r from-deep-navy/80 to-transparent pointer-events-none" />
 
       <div className="absolute left-0 top-1/2 -translate-y-1/2 pl-8 sm:pl-12 md:pl-16 lg:pl-20 max-w-xl lg:max-w-2xl z-10">
         <h1 className="font-fredoka text-4xl sm:text-5xl lg:text-6xl font-bold text-off-white leading-tight tracking-wide drop-shadow-[0_4px_16px_rgba(0,0,0,0.9)] mb-6">

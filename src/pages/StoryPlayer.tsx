@@ -336,31 +336,33 @@ const StoryPlayer = () => {
           {/* Participation Prompt - Responsive */}
           {state === "action" && currentScene?.participation && (
             <div className="flex-1 lg:flex-[0.6] flex items-center justify-center animate-fade-in">
-              <div className="bg-white/95 backdrop-blur-xl rounded-2xl sm:rounded-3xl px-6 sm:px-10 md:px-12 py-6 sm:py-8 md:py-10 shadow-lg border border-border text-center max-w-2xl transition-all duration-300">
+              <div className="bg-deep-navy/80 backdrop-blur-xl rounded-2xl sm:rounded-3xl px-6 sm:px-10 md:px-12 py-6 sm:py-8 md:py-10 shadow-xl border border-white/20 text-center max-w-2xl transition-all duration-300 text-white">
                 {currentScene.participation.type === 'gesture' ? (
                   <>
                     <div className="text-6xl sm:text-7xl md:text-8xl mb-4">🤲</div>
-                    <h2 className="font-fredoka text-2xl sm:text-3xl md:text-4xl font-bold text-deep-navy mb-2">
+                    <h2 className="font-fredoka text-2xl sm:text-3xl md:text-4xl font-bold mb-2">
                       {currentScene.participation.prompt}
                     </h2>
-                    <p className="font-dm-sans text-base sm:text-lg text-muted-foreground mb-2">
+                    <p className="font-dm-sans text-base sm:text-lg text-white/80 mb-2">
                       Show me your move
                     </p>
                   </>
                 ) : (
                   <>
                     <div className="text-6xl sm:text-7xl md:text-8xl mb-4">🗣️</div>
-                    <h2 className="font-fredoka text-2xl sm:text-3xl md:text-4xl font-bold text-deep-navy mb-2">
+                    <h2 className="font-fredoka text-2xl sm:text-3xl md:text-4xl font-bold mb-2">
                       {currentScene.participation.prompt}
                     </h2>
-                    <p className="font-dm-sans text-base sm:text-lg text-muted-foreground">
+                    <p className="font-dm-sans text-base sm:text-lg text-white/80">
                       Say it out loud
                     </p>
                     {currentScene.participation.expectedResponses && (
                       <div className="flex gap-2 sm:gap-3 justify-center mt-3 sm:mt-4 flex-wrap">
                         {currentScene.participation.expectedResponses.slice(0, 5).map((option) => (
-                          <div key={option} className="px-3 sm:px-4 py-1.5 sm:py-2 bg-muted rounded-lg border border-border">
-                            <span className="font-fredoka text-base sm:text-lg text-foreground">{option}</span>
+                          <div key={option} className="px-3 sm:px-4 py-1.5 sm:py-2 bg-white/10 rounded-lg border border-white/20">
+                            <span className="font-fredoka text-base sm:text-lg text-white">
+                              {option}
+                            </span>
                           </div>
                         ))}
                       </div>

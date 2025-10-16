@@ -66,6 +66,10 @@ export const WebcamFeed = ({ isActive, requiredAction, requiredObject, enableSpe
   const gestureRecognizerRef = useRef<GestureRecognizer | null>(null);
   const objectDetectorRef = useRef<cocoSsd.ObjectDetection | null>(null);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const restartTimeoutRef = useRef<number | null>(null);
+  const backoffRef = useRef<number>(500);
+  const isStartingRef = useRef<boolean>(false);
+  const manuallyStoppedRef = useRef<boolean>(false);
   const animationFrameRef = useRef<number | null>(null);
   
   const [privacyMode, setPrivacyMode] = useState(false);
@@ -81,91 +85,133 @@ export const WebcamFeed = ({ isActive, requiredAction, requiredObject, enableSpe
 
   // Initialize speech recognition
   useEffect(() => {
-    // Only listen during speech tasks when explicitly enabled
-    if (!isActive || requiredAction || !enableSpeech) {
-      if (recognitionRef.current) {
-        try { recognitionRef.current.stop(); } catch {}
-        recognitionRef.current = null;
+    // Only listen during speech tasks when explicitly enabled (speech mode)
+    const speechModeActive = isActive && !requiredAction && enableSpeech;
+
+    // Helper to fully stop and clear timers
+    const hardStop = () => {
+      manuallyStoppedRef.current = true;
+      if (restartTimeoutRef.current) {
+        clearTimeout(restartTimeoutRef.current);
+        restartTimeoutRef.current = null;
       }
+      try { recognitionRef.current?.stop(); } catch {}
       setIsListening(false);
+    };
+
+    if (!speechModeActive) {
+      hardStop();
+      recognitionRef.current = null;
+      backoffRef.current = 500;
       return;
     }
+
     const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognitionAPI) {
       console.error("Speech recognition not supported");
       return;
     }
 
-    const recognition = new SpeechRecognitionAPI();
+    manuallyStoppedRef.current = false;
+
+    // Create a single recognition instance (or reuse)
+    const recognition = recognitionRef.current ?? new SpeechRecognitionAPI();
     recognition.continuous = true;
     recognition.interimResults = true;
     recognition.lang = 'en-US';
 
-    // Set up event handlers before starting
-    const startHandler = () => {
+    const safeRestart = () => {
+      if (!speechModeActive || manuallyStoppedRef.current) return;
+      if (isStartingRef.current) return;
+      const delay = backoffRef.current;
+      restartTimeoutRef.current && clearTimeout(restartTimeoutRef.current);
+      restartTimeoutRef.current = window.setTimeout(() => {
+        if (!speechModeActive || manuallyStoppedRef.current) return;
+        try {
+          isStartingRef.current = true;
+          recognition.start();
+        } catch (e) {
+          console.error('Failed to (re)start recognition:', e);
+        }
+      }, delay);
+      backoffRef.current = Math.min(backoffRef.current * 1.5, 4000);
+    };
+
+    const handleStart = () => {
       console.log("🎤 Speech recognition started");
+      isStartingRef.current = false;
+      backoffRef.current = 500; // reset backoff on success
       setIsListening(true);
     };
-    
-    const resultHandler = (event: SpeechRecognitionEvent) => {
+
+    const handleResult = (event: SpeechRecognitionEvent) => {
       const results = event.results;
       const lastResult = results[results.length - 1];
-      const transcript = lastResult[0].transcript;
-      
-      setTranscript(transcript);
-      console.log("🗣️ Heard:", transcript);
-      
+      const text = lastResult[0].transcript;
+      setTranscript(text);
+      console.log("🗣️ Heard:", text);
       if (lastResult.isFinal) {
-        console.log("✅ Final transcript:", transcript);
-        onObjectDetected?.(transcript.trim());
-      }
-    };
-    
-    const errorHandler = (event: any) => {
-      console.error("❌ Speech recognition error:", event.error);
-      if (event.error === 'not-allowed') {
-        console.error("Microphone permission denied!");
-      }
-    };
-    
-    const endHandler = () => {
-      console.log("Speech recognition ended, restarting...");
-      setIsListening(false);
-      if (isActive && !requiredAction) {
-        setTimeout(() => {
-          try {
-            recognition.start();
-          } catch (e) {
-            console.error("Failed to restart recognition:", e);
-          }
-        }, 100);
+        console.log("✅ Final transcript:", text);
+        onObjectDetected?.(text.trim());
       }
     };
 
-    // Assign handlers
-    (recognition as any).onstart = startHandler;
-    recognition.onresult = resultHandler;
-    recognition.onerror = errorHandler;
-    recognition.onend = endHandler;
+    const handleError = (event: any) => {
+      const err = event?.error;
+      console.error("❌ Speech recognition error:", err);
+      // 'aborted' often happens on stop() or page changes - handled by onend
+      if (err === 'not-allowed') {
+        console.error("Microphone permission denied!");
+        manuallyStoppedRef.current = true;
+      }
+    };
+
+    const handleEnd = () => {
+      console.log("Speech recognition ended");
+      setIsListening(false);
+      if (speechModeActive && !manuallyStoppedRef.current && !document.hidden) {
+        console.log("Restarting mic with backoff", backoffRef.current, 'ms');
+        safeRestart();
+      }
+    };
+
+    (recognition as any).onstart = handleStart;
+    recognition.onresult = handleResult;
+    recognition.onerror = handleError;
+    recognition.onend = handleEnd;
 
     recognitionRef.current = recognition;
-    
-    // Request microphone permission and start
+
+    // Request mic permission first, then start
     navigator.mediaDevices.getUserMedia({ audio: true })
       .then(() => {
         console.log("🎤 Microphone permission granted");
-        recognition.start();
+        safeRestart();
       })
       .catch((err) => {
         console.error("❌ Microphone permission denied:", err);
+        manuallyStoppedRef.current = true;
       });
 
-    return () => {
-      if (recognitionRef.current) {
-        recognitionRef.current.stop();
-        recognitionRef.current = null;
+    // Pause mic when tab is hidden
+    const onVisibility = () => {
+      if (document.hidden) {
+        try { recognition.stop(); } catch {}
+        setIsListening(false);
+      } else if (speechModeActive) {
+        safeRestart();
       }
-      setIsListening(false);
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibility);
+      hardStop();
+      (recognition as any).onstart = null;
+      recognition.onresult = null;
+      recognition.onerror = null;
+      recognition.onend = null;
+      recognitionRef.current = null;
     };
   }, [isActive, requiredAction, enableSpeech, onObjectDetected]);
 

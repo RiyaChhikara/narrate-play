@@ -40,24 +40,24 @@ const StoryPlayer = () => {
         const savedActions = localStorage.getItem("selectedActions");
         
         const targetWords = savedWords ? JSON.parse(savedWords) : ["TREASURE", "CRYSTAL", "FOREST", "RAINBOW"];
-        const gestures = savedActions ? JSON.parse(savedActions) : ["wave", "point", "clap"];
+        const gestures = savedActions ? JSON.parse(savedActions) : ["wave", "point", "thumbsup"];
         
         console.log('Loading story with:', { targetWords, gestures });
         
-        // Generate story
+        // Generate story (will use demo fallback immediately)
         const story = await generateStory(targetWords, gestures, "our brave hero");
         
         if (story && story.scenes) {
           setStoryScenes(story.scenes);
           console.log('Story loaded with', story.scenes.length, 'scenes');
+          setIsGeneratingStory(false); // Remove loading state immediately
         } else {
           toast({
             title: "Story Generation Failed",
             description: "Please try again",
             variant: "destructive"
           });
-          // Navigate back if story generation fails
-          setTimeout(() => navigate("/stories"), 2000);
+          setTimeout(() => navigate("/stories"), 1000);
         }
       } catch (error) {
         console.error('Error loading story:', error);
@@ -66,9 +66,7 @@ const StoryPlayer = () => {
           description: "Failed to load story. Please try again.",
           variant: "destructive"
         });
-        setTimeout(() => navigate("/stories"), 2000);
-      } finally {
-        setIsGeneratingStory(false);
+        setTimeout(() => navigate("/stories"), 1000);
       }
     };
 
@@ -296,18 +294,15 @@ const StoryPlayer = () => {
     }
   };
 
-  // Show loading state while generating story
+  // Show minimal loading state
   if (isGeneratingStory || storyScenes.length === 0) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-400 via-pink-300 to-orange-200 flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="w-16 h-16 text-white animate-spin mx-auto mb-4" />
-          <h2 className="font-fredoka text-3xl font-bold text-white mb-2">
-            Creating Your Magical Story...
+          <div className="text-6xl animate-bounce mb-4">✨</div>
+          <h2 className="font-fredoka text-2xl font-bold text-white">
+            Starting your adventure...
           </h2>
-          <p className="font-dm-sans text-white/80">
-            Preparing characters and adventures just for you! ✨
-          </p>
         </div>
       </div>
     );

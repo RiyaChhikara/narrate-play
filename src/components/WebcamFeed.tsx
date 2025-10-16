@@ -78,17 +78,9 @@ export const WebcamFeed = ({ isActive, requiredAction, requiredObject, onGesture
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState("");
 
-  // Speech recognition for non-gesture tasks
+  // Initialize speech recognition
   useEffect(() => {
-    if (!isActive || requiredAction || requiredObject) {
-      // Only activate speech when no gesture/object is required
-      if (recognitionRef.current) {
-        recognitionRef.current.stop();
-        recognitionRef.current = null;
-      }
-      setIsListening(false);
-      return;
-    }
+    if (!isActive || requiredAction) return; // Only activate for speech tasks
 
     const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
     
@@ -102,32 +94,40 @@ export const WebcamFeed = ({ isActive, requiredAction, requiredObject, onGesture
     recognition.interimResults = true;
     recognition.lang = 'en-US';
 
-    recognition.onresult = (event: SpeechRecognitionEvent) => {
+    // Set up event handlers before starting
+    const startHandler = () => {
+      console.log("🎤 Speech recognition started");
+      setIsListening(true);
+    };
+    
+    const resultHandler = (event: SpeechRecognitionEvent) => {
       const results = event.results;
       const lastResult = results[results.length - 1];
       const transcript = lastResult[0].transcript;
       
       setTranscript(transcript);
+      console.log("🗣️ Heard:", transcript);
       
       if (lastResult.isFinal) {
-        console.log("Speech detected:", transcript);
-        onObjectDetected(transcript.trim());
+        console.log("✅ Final transcript:", transcript);
+        onObjectDetected?.(transcript.trim());
       }
     };
-
-    recognition.onerror = (event: any) => {
-      console.error("Speech recognition error:", event.error);
-      setIsListening(false);
+    
+    const errorHandler = (event: any) => {
+      console.error("❌ Speech recognition error:", event.error);
+      if (event.error === 'not-allowed') {
+        console.error("Microphone permission denied!");
+      }
     };
-
-    recognition.onend = () => {
+    
+    const endHandler = () => {
+      console.log("Speech recognition ended, restarting...");
       setIsListening(false);
-      // Restart if still active
-      if (isActive && !requiredAction && !requiredObject) {
+      if (isActive && !requiredAction) {
         setTimeout(() => {
           try {
             recognition.start();
-            setIsListening(true);
           } catch (e) {
             console.error("Failed to restart recognition:", e);
           }
@@ -135,15 +135,23 @@ export const WebcamFeed = ({ isActive, requiredAction, requiredObject, onGesture
       }
     };
 
+    // Assign handlers
+    (recognition as any).onstart = startHandler;
+    recognition.onresult = resultHandler;
+    recognition.onerror = errorHandler;
+    recognition.onend = endHandler;
+
     recognitionRef.current = recognition;
     
-    try {
-      recognition.start();
-      setIsListening(true);
-      console.log("Speech recognition started");
-    } catch (error) {
-      console.error("Failed to start speech recognition:", error);
-    }
+    // Request microphone permission and start
+    navigator.mediaDevices.getUserMedia({ audio: true })
+      .then(() => {
+        console.log("🎤 Microphone permission granted");
+        recognition.start();
+      })
+      .catch((err) => {
+        console.error("❌ Microphone permission denied:", err);
+      });
 
     return () => {
       if (recognitionRef.current) {
@@ -152,9 +160,8 @@ export const WebcamFeed = ({ isActive, requiredAction, requiredObject, onGesture
       }
       setIsListening(false);
     };
-  }, [isActive, requiredAction, requiredObject, onObjectDetected]);
+  }, [isActive, requiredAction, onObjectDetected]);
 
-  // Initialize MediaPipe and COCO-SSD
   useEffect(() => {
     const initModels = async () => {
       try {

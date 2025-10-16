@@ -351,13 +351,13 @@ const StoryPlayer = () => {
         </span>
       </div>
 
-      {/* Main Content Area - Split Layout */}
-      <div className="absolute inset-0 flex items-center justify-center p-8 pt-32 pb-96">
-        <div className="flex gap-8 w-full max-w-7xl h-full max-h-[600px]">
-          {/* Left side: Story prompt (60%) with enhanced animations */}
+      {/* Main Content Area - Responsive Layout */}
+      <div className="absolute inset-0 flex items-center justify-center p-4 sm:p-6 md:p-8 pt-24 sm:pt-28 md:pt-32 pb-72 sm:pb-80 md:pb-96">
+        <div className="flex flex-col lg:flex-row gap-4 sm:gap-6 lg:gap-8 w-full max-w-7xl h-full max-h-[600px]">
+          {/* Participation Prompt - Responsive */}
           {state === "action" && currentScene?.participation && (
-            <div className="flex-[0.6] flex items-center justify-center animate-[slideInUp_0.6s_ease-out]">
-              <div className="bg-white/95 backdrop-blur-xl rounded-3xl px-12 py-10 shadow-[0_0_60px_rgba(255,140,66,0.6)] border-4 border-hero-orange text-center max-w-2xl animate-[pulse_2s_ease-in-out_infinite] relative">
+            <div className="flex-1 lg:flex-[0.6] flex items-center justify-center animate-[slideInUp_0.6s_ease-out]">
+              <div className="bg-white/95 backdrop-blur-xl rounded-2xl sm:rounded-3xl px-6 sm:px-10 md:px-12 py-6 sm:py-8 md:py-10 shadow-[0_0_60px_rgba(255,140,66,0.6)] border-2 sm:border-4 border-hero-orange text-center max-w-2xl animate-[pulse_2s_ease-in-out_infinite] relative">
                 {/* Floating sparkles around card */}
                 <div className="absolute inset-0 pointer-events-none">
                   {[...Array(6)].map((_, i) => (
@@ -377,28 +377,28 @@ const StoryPlayer = () => {
 
                 {currentScene.participation.type === 'gesture' ? (
                   <>
-                    <div className="text-8xl mb-4 animate-bounce">🤲</div>
-                    <h2 className="font-fredoka text-4xl font-bold text-deep-navy mb-2">
+                    <div className="text-6xl sm:text-7xl md:text-8xl mb-4 animate-bounce">🤲</div>
+                    <h2 className="font-fredoka text-2xl sm:text-3xl md:text-4xl font-bold text-deep-navy mb-2">
                       {currentScene.participation.prompt}
                     </h2>
-                    <p className="font-dm-sans text-lg text-muted-foreground mb-2">
+                    <p className="font-dm-sans text-base sm:text-lg text-muted-foreground mb-2">
                       Show me your move!
                     </p>
                   </>
                 ) : (
                   <>
-                    <div className="text-8xl mb-4 animate-pulse">🗣️</div>
-                    <h2 className="font-fredoka text-4xl font-bold text-deep-navy mb-2">
+                    <div className="text-6xl sm:text-7xl md:text-8xl mb-4 animate-pulse">🗣️</div>
+                    <h2 className="font-fredoka text-2xl sm:text-3xl md:text-4xl font-bold text-deep-navy mb-2">
                       {currentScene.participation.prompt}
                     </h2>
-                    <p className="font-dm-sans text-lg text-muted-foreground">
+                    <p className="font-dm-sans text-base sm:text-lg text-muted-foreground">
                       Say it out loud!
                     </p>
                     {currentScene.participation.expectedResponses && (
-                      <div className="flex gap-3 justify-center mt-4 flex-wrap">
+                      <div className="flex gap-2 sm:gap-3 justify-center mt-3 sm:mt-4 flex-wrap">
                         {currentScene.participation.expectedResponses.slice(0, 5).map((option) => (
-                          <div key={option} className="px-4 py-2 bg-hero-orange/20 rounded-lg border-2 border-hero-orange animate-pulse">
-                            <span className="font-fredoka text-lg">{option}</span>
+                          <div key={option} className="px-3 sm:px-4 py-1.5 sm:py-2 bg-hero-orange/20 rounded-lg border-2 border-hero-orange animate-pulse">
+                            <span className="font-fredoka text-base sm:text-lg">{option}</span>
                           </div>
                         ))}
                       </div>
@@ -409,8 +409,8 @@ const StoryPlayer = () => {
             </div>
           )}
           
-          {/* Right side: Large webcam feed (40%) */}
-          <div className="flex-[0.4] min-h-[400px]">
+          {/* Webcam Feed - Responsive */}
+          <div className="flex-1 lg:flex-[0.4] min-h-[300px] sm:min-h-[400px]">
             <WebcamFeed 
               isActive={state === "action"} 
               requiredAction={currentScene?.participation?.type === 'gesture' ? currentScene.participation.expectedResponses?.[0] : undefined}

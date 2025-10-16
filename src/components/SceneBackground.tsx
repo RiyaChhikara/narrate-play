@@ -1,3 +1,6 @@
+import { useEffect, useState } from 'react';
+import crystalTreasure from '@/assets/crystal-treasure.jpg';
+
 interface SceneBackgroundProps {
   sceneNumber: number;
   totalScenes: number;
@@ -21,10 +24,10 @@ export const SceneBackground = ({ sceneNumber, totalScenes }: SceneBackgroundPro
         backgroundPosition: "center",
       };
     }
-    // Scene 3: Crystal Cave
+    // Scene 3: Crystal Treasure
     if (sceneNumber === 2) {
       return {
-        backgroundImage: "url('https://images.unsplash.com/photo-1484542603127-984f4f7f14e7?w=1920&h=1080&fit=crop')",
+        backgroundImage: `url(${crystalTreasure})`,
         backgroundSize: "cover",
         backgroundPosition: "center",
       };

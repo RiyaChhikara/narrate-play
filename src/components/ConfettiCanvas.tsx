@@ -20,14 +20,22 @@ export const ConfettiCanvas = () => {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    // Responsive canvas sizing
+    const setCanvasSize = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+    
+    setCanvasSize();
+    window.addEventListener('resize', setCanvasSize);
 
     const emojis = ['🎉', '⭐', '✨', '🌟', '💫', '🎊', '🎈'];
     const particles: Particle[] = [];
 
     // Create particles
-    for (let i = 0; i < 50; i++) {
+    // Responsive particle count
+    const particleCount = window.innerWidth < 640 ? 30 : window.innerWidth < 1024 ? 40 : 50;
+    for (let i = 0; i < particleCount; i++) {
       particles.push({
         x: Math.random() * canvas.width,
         y: -20,
@@ -47,7 +55,8 @@ export const ConfettiCanvas = () => {
         ctx.save();
         ctx.translate(particle.x, particle.y);
         ctx.rotate((particle.rotation * Math.PI) / 180);
-        ctx.font = '30px Arial';
+        // Responsive font size
+        ctx.font = window.innerWidth < 640 ? '20px Arial' : '30px Arial';
         ctx.fillText(particle.emoji, 0, 0);
         ctx.restore();
 
@@ -70,6 +79,7 @@ export const ConfettiCanvas = () => {
 
     return () => {
       cancelAnimationFrame(animationId);
+      window.removeEventListener('resize', setCanvasSize);
     };
   }, []);
 
@@ -77,7 +87,7 @@ export const ConfettiCanvas = () => {
     <canvas
       ref={canvasRef}
       className="absolute inset-0 pointer-events-none"
-      style={{ zIndex: 100 }}
+      style={{ zIndex: 100, touchAction: 'none' }}
     />
   );
 };

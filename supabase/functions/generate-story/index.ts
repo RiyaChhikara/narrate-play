@@ -27,37 +27,51 @@ serve(async (req) => {
       return langMap[code] || code;
     });
 
-    const storyPrompt = `Create an interactive multilingual children's story with code-switching.
+    const primaryLanguage = languageNames[0] || "English";
+    const secondaryLanguage = languageNames[1] || null;
+    const isMultilingual = languageNames.length > 1;
 
-LANGUAGES: The child speaks ${languageNames.join(' and ')}
-INSTRUCTIONS FOR MULTILINGUAL STORYTELLING:
-- Mix languages naturally (code-switching)
-- Use English for main narration
-- Use ${languageNames[1] || languageNames[0]} for key "Magic Words" and character dialogue
-- Repeat important words in both languages
-- Example: "The hero found a KHAZANA (treasure)! Can you say KHAZANA?"
+    const storyPrompt = `You are creating an interactive children's story. Follow these EXACT requirements:
 
-TARGET MAGIC WORDS: ${targetWords.join(', ')}
-These words MUST appear in the story. Use them in both languages with translation.
+🎯 CRITICAL CONSTRAINTS (MUST FOLLOW):
 
-GESTURES/ACTIONS: ${gestures.join(', ')}
-The story should prompt these physical actions only.
+1. MAGIC WORDS TO USE (MANDATORY):
+   Words: ${targetWords.join(', ')}
+   - Each scene MUST feature ONE of these words as the key focus
+   - Make these words EXCITING and central to the scene
+   - ${isMultilingual ? `Use BOTH languages for magic words. Format: "WORD (translation)"` : 'Emphasize these words dramatically'}
+   - Example: "Look! A magical KHAZANA (TREASURE) appears! ✨"
 
-CHILD'S NAME: ${childName || 'the brave hero'}
+2. ACTIONS/GESTURES (MANDATORY):
+   Available actions: ${gestures.join(', ')}
+   - ONLY use actions from this list
+   - Each scene needs ONE participation moment using these actions
+   - Make actions feel natural and fun
+   - Example: If "wave" is available, use "Wave hello to the dragon!"
 
-Create a magical adventure story with 5 scenes. Each scene should:
-1. Have dialogue between 2-3 characters (Mom/Parent, Dad/Friend, Narrator)
-2. Include ONE participation moment where the child gets to interact
-3. Be 30-60 seconds of dialogue
-4. Naturally incorporate one target word in both languages
-5. Build excitement and encourage the child
-6. Code-switch naturally between languages
+3. LANGUAGES (MANDATORY):
+   ${isMultilingual ? 
+     `Primary: ${primaryLanguage}, Secondary: ${secondaryLanguage}
+   - Use ${primaryLanguage} for narration
+   - Use ${secondaryLanguage} for magic words and key phrases
+   - Code-switch naturally: "The hero found a KHAZANA (treasure)! Can you say KHAZANA?"
+   - Repeat important words in both languages` :
+     `Language: ${primaryLanguage} only`
+   }
 
-Participation types to rotate:
-- CHOICE: Ask child to choose (color, direction, object)
-- WORD: Have characters say a target word in both languages, pause for child to repeat
-- GESTURE: Ask child to do a physical action
-- OBJECT: Ask child to find and show an object
+4. CHILD'S NAME: ${childName || 'the brave hero'}
+
+5. STORY STRUCTURE:
+   - Create exactly 5 scenes
+   - Each scene: 30-60 seconds of dialogue
+   - Characters: Mom, Dad, Narrator (rotate speakers)
+   - Build excitement and celebrate participation
+
+PARTICIPATION TYPES (rotate through these):
+- "gesture": Ask child to perform a physical action (${gestures.slice(0, 3).join(', ')})
+- "word": Ask child to repeat a magic word in both languages
+- "choice": Ask child to make a choice
+- "object": Ask child to find/show something
 
 Return ONLY valid JSON in this exact format:
 {
@@ -105,7 +119,10 @@ Make it magical, encouraging, and full of wonder. Characters should celebrate th
         messages: [
           {
             role: 'system',
-            content: 'You are a creative children\'s story writer who creates interactive, educational, and magical stories. You MUST return ONLY valid JSON with no markdown formatting or code blocks.'
+            content: `You are a creative children's story writer specializing in interactive, educational stories. 
+You MUST follow ALL constraints provided about magic words, actions, and languages.
+You MUST return ONLY valid JSON with no markdown formatting or code blocks.
+Make the story exciting and ensure every magic word and action from the user's settings appears in the story.`
           },
           {
             role: 'user',

@@ -49,18 +49,19 @@ const Stories = () => {
 
   const handleGenerateStory = async () => {
     try {
-      // Get settings from localStorage
+      // Get ALL settings from localStorage
       const selectedLanguages = JSON.parse(localStorage.getItem("selectedLanguages") || '["en"]');
-      const words = JSON.parse(localStorage.getItem("words") || '["TREASURE", "CRYSTAL"]');
-      const actions = JSON.parse(localStorage.getItem("selectedActions") || '["wave", "point"]');
+      const magicWords = JSON.parse(localStorage.getItem("words") || '["TREASURE", "CRYSTAL", "RAINBOW"]');
+      const selectedActions = JSON.parse(localStorage.getItem("selectedActions") || '["wave", "point", "clap"]');
       
-      toast.loading("Creating your magical story...");
+      console.log('Story settings:', { selectedLanguages, magicWords, selectedActions });
       
-      const story = await generateStory(words, actions, "Hero", false, selectedLanguages);
+      toast.loading("Creating your personalized story with your magic words and actions...");
+      
+      const story = await generateStory(magicWords, selectedActions, "Hero", false, selectedLanguages);
       
       if (story) {
         toast.success("Story created! 🎉");
-        // Navigate to story player with generated story
         navigate("/story/generated", { state: { story } });
       }
     } catch (error) {

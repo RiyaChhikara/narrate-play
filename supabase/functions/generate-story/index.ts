@@ -80,18 +80,18 @@ Make it magical, encouraging, and full of wonder. Characters should celebrate th
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-5-mini-2025-08-07',
+        model: 'gpt-4o-mini',
         messages: [
           {
             role: 'system',
-            content: 'You are a creative children\'s story writer who creates interactive, educational, and magical stories. Always return valid JSON.'
+            content: 'You are a creative children\'s story writer who creates interactive, educational, and magical stories. You MUST return ONLY valid JSON with no markdown formatting or code blocks.'
           },
           {
             role: 'user',
             content: storyPrompt
           }
         ],
-        max_completion_tokens: 2000,
+        max_tokens: 2000,
       }),
     });
 
@@ -102,7 +102,12 @@ Make it magical, encouraging, and full of wonder. Characters should celebrate th
     }
 
     const data = await response.json();
-    const storyJson = data.choices[0].message.content;
+    let storyJson = data.choices[0].message.content;
+    
+    console.log('Raw story response:', storyJson.substring(0, 200));
+
+    // Clean JSON response (remove markdown code blocks if present)
+    storyJson = storyJson.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
     
     console.log('Story generated successfully');
 

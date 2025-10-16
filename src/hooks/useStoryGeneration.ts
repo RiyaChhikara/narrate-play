@@ -8,7 +8,7 @@ interface DialogueLine {
 }
 
 interface Participation {
-  type: 'choice' | 'word' | 'gesture' | 'object';
+  type: 'choice' | 'word' | 'gesture' | 'speech';
   speaker: string;
   prompt: string;
   targetWord: string;
@@ -71,11 +71,11 @@ const DEMO_STORY: Story = {
         }
       ],
       participation: {
-        type: "object",
+        type: "speech",
         speaker: "Mom",
-        prompt: "Can you find something BLUE and show it to us?",
+        prompt: "What's your favorite color?",
         targetWord: "treasure",
-        expectedResponses: ["blue"]
+        expectedResponses: ["blue", "red", "green", "yellow"]
       },
       ambiance: "magic_sparkles",
       music: "discovery_theme"

@@ -23,7 +23,8 @@ const StoryPlayer = () => {
   const [showSettings, setShowSettings] = useState(false);
   const [narrationText, setNarrationText] = useState("");
   const [gestureDetected, setGestureDetected] = useState(false);
-  const [objectDetected, setObjectDetected] = useState(false);
+  const [speechDetected, setSpeechDetected] = useState(false);
+  const [userResponse, setUserResponse] = useState("");
   const [storyScenes, setStoryScenes] = useState<StoryScene[]>([]);
   const [isGeneratingStory, setIsGeneratingStory] = useState(true);
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
@@ -99,7 +100,8 @@ const StoryPlayer = () => {
         // After narration, show participation prompt
         setState("action");
         setGestureDetected(false);
-        setObjectDetected(false);
+        setSpeechDetected(false);
+        setUserResponse("");
 
         // Play participation prompt
         if (currentScene.participation) {
@@ -132,11 +134,8 @@ const StoryPlayer = () => {
 
     if (type === 'gesture') {
       return gestureDetected;
-    } else if (type === 'object') {
-      return objectDetected;
-    } else if (type === 'choice' || type === 'word') {
-      // For choice/word, we'll detect through speech
-      return gestureDetected; // Reuse gesture detection for speech
+    } else if (type === 'speech' || type === 'choice' || type === 'word') {
+      return speechDetected;
     }
     
     return false;
@@ -146,7 +145,7 @@ const StoryPlayer = () => {
     if (state === "action" && checkSceneCompletion()) {
       handleSceneComplete();
     }
-  }, [gestureDetected, objectDetected, state]);
+  }, [gestureDetected, speechDetected, state]);
 
   const handleGestureDetected = async (gesture: string) => {
     if (!currentScene?.participation || state !== "action") return;
@@ -165,14 +164,15 @@ const StoryPlayer = () => {
     }
   };
 
-  const handleObjectDetected = async (object: string) => {
-    if (state === "action" && !objectDetected) {
-      setObjectDetected(true);
+  const handleSpeechDetected = async (text: string) => {
+    if (state === "action" && !speechDetected) {
+      setSpeechDetected(true);
+      setUserResponse(text);
       setShowConfetti(true);
       
       toast({
-        title: "✨ Found it!",
-        description: `You found the ${object}!`,
+        title: "🎤 I heard you!",
+        description: `"${text}" - Great answer!`,
       });
     }
   };
@@ -202,7 +202,8 @@ const StoryPlayer = () => {
         setSceneIndex(sceneIndex + 1);
         setState("passive");
         setGestureDetected(false);
-        setObjectDetected(false);
+        setSpeechDetected(false);
+        setUserResponse("");
       } else {
         toast({
           title: "🎊 Story Complete!",
@@ -264,12 +265,8 @@ const StoryPlayer = () => {
         const { type } = currentScene.participation;
         if (type === 'gesture') {
           return `✨ Time to participate!`;
-        } else if (type === 'object') {
-          return `🔍 Find the object!`;
-        } else if (type === 'choice') {
-          return "💭 Make your choice!";
-        } else if (type === 'word') {
-          return "🗣️ Say the magic word!";
+        } else if (type === 'speech' || type === 'choice' || type === 'word') {
+          return "🎤 Tell me your answer!";
         }
         return "✨ Your turn!";
       case "success":
@@ -394,20 +391,7 @@ const StoryPlayer = () => {
                 {/* Pulsing outer glow */}
                 <div className="absolute inset-0 rounded-3xl bg-hero-orange/20 animate-ping" style={{ animationDuration: '2s' }} />
                 
-                {currentScene.participation.type === 'object' ? (
-                  <div className="relative z-10">
-                    <div className="text-8xl mb-4 animate-bounce">📦</div>
-                    <h2 className="font-fredoka text-4xl font-bold text-deep-navy mb-2">
-                      {currentScene.participation.prompt}
-                    </h2>
-                    <p className="font-dm-sans text-lg text-muted-foreground mb-2">
-                      Look around your room!
-                    </p>
-                    <p className="font-dm-sans text-sm text-muted-foreground/70">
-                      Show it to the camera! 📹✨
-                    </p>
-                  </div>
-                ) : currentScene.participation.type === 'gesture' ? (
+                {currentScene.participation.type === 'gesture' ? (
                   <div className="relative z-10">
                     <div className="text-8xl mb-4 animate-[bounce_1s_ease-in-out_infinite]">✨</div>
                     <h2 className="font-fredoka text-4xl font-bold text-deep-navy mb-2">
@@ -419,22 +403,18 @@ const StoryPlayer = () => {
                   </div>
                 ) : (
                   <div className="relative z-10">
-                    <div className="text-8xl mb-4 animate-pulse">💭</div>
-                    <h2 className="font-fredoka text-3xl font-bold text-deep-navy mb-2">
+                    <div className="text-8xl mb-4 animate-pulse">🎤</div>
+                    <h2 className="font-fredoka text-4xl font-bold text-deep-navy mb-2">
                       {currentScene.participation.prompt}
                     </h2>
                     <p className="font-dm-sans text-lg text-muted-foreground">
-                      {currentScene.participation.type === 'word' 
-                        ? 'Say it out loud!'
-                        : 'Make your choice!'}
+                      Just say your answer out loud!
                     </p>
-                    {currentScene.participation.expectedResponses && (
-                      <div className="flex gap-3 justify-center mt-4">
-                        {currentScene.participation.expectedResponses.map((option) => (
-                          <div key={option} className="px-4 py-2 bg-hero-orange/20 rounded-lg border-2 border-hero-orange">
-                            <span className="font-fredoka text-lg">{option}</span>
-                          </div>
-                        ))}
+                    {userResponse && (
+                      <div className="mt-4 px-6 py-3 bg-green-100 rounded-lg border-2 border-green-500">
+                        <p className="font-fredoka text-xl text-green-700">
+                          You said: "{userResponse}"
+                        </p>
                       </div>
                     )}
                   </div>
@@ -448,9 +428,8 @@ const StoryPlayer = () => {
             <WebcamFeed 
               isActive={state === "action"} 
               requiredAction={currentScene?.participation?.type === 'gesture' ? currentScene.participation.expectedResponses?.[0] : undefined}
-              requiredObject={currentScene?.participation?.type === 'object' ? currentScene.participation.expectedResponses?.[0] : undefined}
               onGestureDetected={handleGestureDetected}
-              onObjectDetected={handleObjectDetected}
+              onSpeechDetected={handleSpeechDetected}
             />
           </div>
         </div>

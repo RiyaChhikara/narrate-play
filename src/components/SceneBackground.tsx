@@ -1,80 +1,70 @@
-interface SceneBackgroundProps {
-  sceneNumber: number;
-}
+import { useEffect, useState } from "react";
 
-export const SceneBackground = ({ sceneNumber }: SceneBackgroundProps) => {
-  const getBackgroundStyle = () => {
-    switch (sceneNumber % 5) {
-      case 1:
-        return {
-          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-          pattern: (
-            <div className="absolute inset-0 opacity-20">
-              <div className="absolute top-10 left-10 text-6xl">🌙</div>
-              <div className="absolute top-20 right-20 text-4xl animate-pulse">⭐</div>
-              <div className="absolute bottom-20 left-20 text-5xl">✨</div>
-              <div className="absolute top-1/2 right-10 text-3xl animate-pulse">⭐</div>
-            </div>
-          ),
-        };
-      case 2:
-        return {
-          background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-          pattern: (
-            <div className="absolute inset-0 opacity-20">
-              <div className="absolute top-20 left-10 text-7xl">🏰</div>
-              <div className="absolute top-40 right-20 text-5xl">🚩</div>
-              <div className="absolute bottom-20 left-1/3 text-6xl">👑</div>
-            </div>
-          ),
-        };
-      case 3:
-        return {
-          background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-          pattern: (
-            <div className="absolute inset-0 opacity-20">
-              <div className="absolute top-10 left-20 text-6xl">☁️</div>
-              <div className="absolute top-1/3 right-10 text-7xl">☁️</div>
-              <div className="absolute bottom-20 left-10 text-5xl">☁️</div>
-              <div className="absolute top-2/3 left-1/2 text-4xl">🌈</div>
-            </div>
-          ),
-        };
-      case 4:
-        return {
-          background: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
-          pattern: (
-            <div className="absolute inset-0 opacity-20">
-              <div className="absolute top-20 left-10 text-8xl">🌳</div>
-              <div className="absolute top-40 right-10 text-6xl">🌲</div>
-              <div className="absolute bottom-10 left-1/3 text-7xl">🌴</div>
-              <div className="absolute top-10 right-1/4 text-4xl animate-bounce">🦋</div>
-            </div>
-          ),
-        };
-      default:
-        return {
-          background: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
-          pattern: (
-            <div className="absolute inset-0 opacity-20">
-              <div className="absolute top-20 left-1/4 text-8xl">💎</div>
-              <div className="absolute bottom-20 right-1/4 text-7xl">✨</div>
-              <div className="absolute top-1/2 left-10 text-5xl animate-pulse">⭐</div>
-            </div>
-          ),
-        };
-    }
-  };
+const SCENE_KEYWORDS = [
+  "magical+forest+fantasy",
+  "treasure+chest+golden",
+  "castle+fairytale+fantasy",
+  "celebration+party+colorful",
+  "stars+night+magical"
+];
 
-  const { background, pattern } = getBackgroundStyle();
+export const SceneBackground = ({ sceneNumber }: { sceneNumber: number }) => {
+  const [isAnimating, setIsAnimating] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
+  
+  useEffect(() => {
+    setIsAnimating(true);
+    setImageLoaded(false);
+    const timer = setTimeout(() => setIsAnimating(false), 800);
+    return () => clearTimeout(timer);
+  }, [sceneNumber]);
+
+  const keywords = SCENE_KEYWORDS[(sceneNumber - 1) % SCENE_KEYWORDS.length];
+  const imageUrl = `https://source.unsplash.com/1920x1080/?${keywords}`;
 
   return (
-    <div
-      className="absolute inset-0 -z-10 overflow-hidden"
-      style={{ background }}
-    >
-      {pattern}
-      <div className="absolute inset-0 bg-black/10" />
+    <div className="absolute inset-0">
+      {/* Unsplash background image */}
+      <div 
+        className={`absolute inset-0 bg-cover bg-center transition-all duration-1000 ${isAnimating ? 'scale-110' : 'scale-100'}`}
+        style={{ 
+          backgroundImage: `url(${imageUrl})`,
+          opacity: imageLoaded ? 1 : 0
+        }}
+      >
+        <img 
+          src={imageUrl} 
+          alt="" 
+          className="hidden"
+          onLoad={() => setImageLoaded(true)}
+        />
+      </div>
+
+      {/* Fallback gradient while image loads */}
+      {!imageLoaded && (
+        <div className="absolute inset-0 bg-gradient-to-br from-purple-900 via-blue-800 to-indigo-900 animate-pulse" />
+      )}
+
+      {/* Dark overlay for better text readability */}
+      <div className={`absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-black/40 transition-opacity duration-1000 ${isAnimating ? 'opacity-100' : 'opacity-80'}`} />
+      
+      {/* Floating sparkles */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {[...Array(20)].map((_, i) => (
+          <div
+            key={i}
+            className="absolute text-2xl opacity-60 animate-float"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              animationDelay: `${Math.random() * 3}s`,
+              animationDuration: `${3 + Math.random() * 2}s`,
+            }}
+          >
+            ✨
+          </div>
+        ))}
+      </div>
     </div>
   );
 };

@@ -1,14 +1,15 @@
 import { useEffect, useRef, useState } from "react";
 import { GestureRecognizer, FilesetResolver, DrawingUtils } from "@mediapipe/tasks-vision";
+import * as cocoSsd from '@tensorflow-models/coco-ssd';
+import '@tensorflow/tfjs';
 import { Eye, EyeOff } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Confetti } from "@/components/Confetti";
 
 interface WebcamFeedProps {
   isActive: boolean;
   requiredAction?: string;
+  requiredObject?: string;
   onGestureDetected: (gesture: string) => void;
-  onSpeechDetected: (text: string) => void;
+  onObjectDetected: (object: string) => void;
 }
 
 const GESTURE_MAP: Record<string, string> = {
@@ -19,24 +20,24 @@ const GESTURE_MAP: Record<string, string> = {
   "Victory": "peace",
 };
 
-export const WebcamFeed = ({ isActive, requiredAction, onGestureDetected, onSpeechDetected }: WebcamFeedProps) => {
+export const WebcamFeed = ({ isActive, requiredAction, requiredObject, onGestureDetected, onObjectDetected }: WebcamFeedProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const gestureRecognizerRef = useRef<GestureRecognizer | null>(null);
+  const objectDetectorRef = useRef<cocoSsd.ObjectDetection | null>(null);
   const animationFrameRef = useRef<number | null>(null);
-  const recognitionRef = useRef<any>(null);
   
   const [privacyMode, setPrivacyMode] = useState(false);
   const [detectionStatus, setDetectionStatus] = useState<string>("");
   const [handDetected, setHandDetected] = useState(false);
   const [confidence, setConfidence] = useState(0);
+  const [detectedObjects, setDetectedObjects] = useState<Array<{ class: string; score: number; bbox: number[] }>>([]);
+  const [objectFound, setObjectFound] = useState(false);
   const [showSuccessAnimation, setShowSuccessAnimation] = useState(false);
   const [detectedGestureName, setDetectedGestureName] = useState("");
-  const [isListening, setIsListening] = useState(false);
-  const [transcript, setTranscript] = useState("");
 
-  // Initialize MediaPipe and Speech Recognition
+  // Initialize MediaPipe and COCO-SSD
   useEffect(() => {
     const initModels = async () => {
       try {
@@ -51,43 +52,19 @@ export const WebcamFeed = ({ isActive, requiredAction, onGestureDetected, onSpee
             delegate: "GPU"
           },
           runningMode: "VIDEO",
-          numHands: 2,
-          minHandDetectionConfidence: 0.3,
-          minHandPresenceConfidence: 0.3,
-          minTrackingConfidence: 0.3
+          numHands: 1,
+          minHandDetectionConfidence: 0.5,
+          minHandPresenceConfidence: 0.5,
+          minTrackingConfidence: 0.5
         });
         
         gestureRecognizerRef.current = recognizer;
         console.log("Gesture recognizer initialized");
 
-        // Initialize speech recognition
-        const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-        if (SpeechRecognition) {
-          const recognition = new SpeechRecognition();
-          recognition.continuous = true;
-          recognition.interimResults = true;
-          recognition.lang = 'en-US';
-
-          recognition.onresult = (event: any) => {
-            const current = event.resultIndex;
-            const transcriptText = event.results[current][0].transcript;
-            setTranscript(transcriptText);
-            
-            if (event.results[current].isFinal) {
-              console.log('Speech detected:', transcriptText);
-              onSpeechDetected(transcriptText);
-              setIsListening(false);
-            }
-          };
-
-          recognition.onerror = (event: any) => {
-            console.error('Speech recognition error:', event.error);
-            setIsListening(false);
-          };
-
-          recognitionRef.current = recognition;
-          console.log("Speech recognition initialized");
-        }
+        // Initialize object detector
+        const detector = await cocoSsd.load();
+        objectDetectorRef.current = detector;
+        console.log("Object detector initialized");
       } catch (error) {
         console.error("Error loading models:", error);
       }
@@ -97,11 +74,8 @@ export const WebcamFeed = ({ isActive, requiredAction, onGestureDetected, onSpee
 
     return () => {
       gestureRecognizerRef.current?.close();
-      if (recognitionRef.current) {
-        recognitionRef.current.stop();
-      }
     };
-  }, [onSpeechDetected]);
+  }, []);
 
   // Start webcam
   useEffect(() => {
@@ -113,10 +87,8 @@ export const WebcamFeed = ({ isActive, requiredAction, onGestureDetected, onSpee
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
       }
-      if (recognitionRef.current) {
-        recognitionRef.current.stop();
-        setIsListening(false);
-      }
+      setObjectFound(false);
+      setDetectedObjects([]);
       return;
     }
 
@@ -152,24 +124,12 @@ export const WebcamFeed = ({ isActive, requiredAction, onGestureDetected, onSpee
     };
   }, [isActive]);
 
-  // Start speech recognition when not detecting gestures
-  useEffect(() => {
-    if (isActive && !requiredAction && recognitionRef.current && !isListening) {
-      try {
-        recognitionRef.current.start();
-        setIsListening(true);
-        console.log('Speech recognition started');
-      } catch (error) {
-        console.error('Error starting speech recognition:', error);
-      }
-    }
-  }, [isActive, requiredAction, isListening]);
-
-  // Gesture detection loop
+  // Gesture and object detection loop
   const detectGesturesAndObjects = () => {
     const video = videoRef.current;
     const canvas = canvasRef.current;
     const gestureRecognizer = gestureRecognizerRef.current;
+    const objectDetector = objectDetectorRef.current;
 
     if (!video || !canvas) return;
 
@@ -216,7 +176,7 @@ export const WebcamFeed = ({ isActive, requiredAction, onGestureDetected, onSpee
 
             setConfidence(conf);
 
-            if (recognizedGesture && conf > 0.55) {
+            if (recognizedGesture && conf > 0.7) {
               setDetectedGestureName(recognizedGesture);
               if (requiredAction && recognizedGesture === requiredAction) {
                 setDetectionStatus("correct");
@@ -234,6 +194,45 @@ export const WebcamFeed = ({ isActive, requiredAction, onGestureDetected, onSpee
         }
       }
 
+      // Object detection
+      if (objectDetector && requiredObject) {
+        const predictions = await objectDetector.detect(video);
+        setDetectedObjects(predictions);
+
+        // Draw bounding boxes for detected objects
+        predictions.forEach((prediction) => {
+          const [x, y, width, height] = prediction.bbox;
+          
+          // Check if this is the required object
+          const isRequired = requiredObject && 
+            prediction.class.toLowerCase().includes(requiredObject.toLowerCase());
+          
+          ctx.strokeStyle = isRequired ? "#00FF00" : "#FFD700";
+          ctx.lineWidth = isRequired ? 4 : 2;
+          ctx.strokeRect(x, y, width, height);
+          
+          // Add glow effect for required object
+          if (isRequired) {
+            ctx.shadowColor = "#00FF00";
+            ctx.shadowBlur = 20;
+            ctx.strokeRect(x, y, width, height);
+            ctx.shadowBlur = 0;
+          }
+
+          // Draw label
+          ctx.fillStyle = isRequired ? "#00FF00" : "#FFD700";
+          ctx.font = "bold 16px Arial";
+          const text = `${prediction.class} ${Math.round(prediction.score * 100)}%`;
+          ctx.fillText(text, x, y > 20 ? y - 5 : y + height + 20);
+
+          // Notify if required object is found
+          if (isRequired && prediction.score > 0.6 && !objectFound) {
+            setObjectFound(true);
+            onObjectDetected(prediction.class);
+          }
+        });
+      }
+
       animationFrameRef.current = requestAnimationFrame(detect);
     };
 
@@ -244,12 +243,8 @@ export const WebcamFeed = ({ isActive, requiredAction, onGestureDetected, onSpee
 
   return (
     <div className="relative w-full h-full">
-      <div className={`relative rounded-2xl overflow-hidden shadow-2xl transition-all duration-500 h-full ${
-        detectionStatus === 'correct' 
-          ? 'border-8 border-green-500 shadow-[0_0_60px_rgba(34,197,94,0.9)] animate-pulse' 
-          : handDetected
-            ? 'border-4 border-hero-orange/80 shadow-[0_0_30px_rgba(255,140,66,0.6)] animate-pulse'
-            : 'border-4 border-hero-orange shadow-[0_0_30px_rgba(255,140,66,0.4)]'
+      <div className={`relative rounded-2xl overflow-hidden shadow-2xl transition-all duration-300 h-full ${
+        detectionStatus === 'correct' ? 'border-8 border-green-500 shadow-[0_0_40px_rgba(34,197,94,0.8)]' : 'border-4 border-hero-orange'
       }`}>
         {/* Video */}
         <video
@@ -267,15 +262,6 @@ export const WebcamFeed = ({ isActive, requiredAction, onGestureDetected, onSpee
           height={480}
           className="absolute top-0 left-0 w-full h-full transform scale-x-[-1]"
         />
-
-        {/* Hand placement guide (shown when awaiting gesture) */}
-        {requiredAction && !handDetected && (
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div className="relative w-40 h-56 md:w-48 md:h-64 rounded-3xl border-2 border-dashed border-white/70 animate-pulse bg-black/10">
-              <div className="absolute inset-0 flex items-center justify-center text-6xl md:text-7xl opacity-70">👋</div>
-            </div>
-          </div>
-        )}
 
         {/* Privacy Mode Toggle */}
         <button
@@ -317,52 +303,33 @@ export const WebcamFeed = ({ isActive, requiredAction, onGestureDetected, onSpee
             </div>
           </div>
         )}
-        {/* Confetti celebration */}
-        <Confetti active={showSuccessAnimation} />
 
-        {/* Debug Overlay intentionally hidden by default */}
-        {false && process.env.NODE_ENV === 'development' && (
-          <div className="absolute top-12 left-2 bg-black/80 text-white px-3 py-2 rounded-lg text-xs font-mono">
-            <div>Status: <span className="text-green-400">{detectionStatus || 'waiting'}</span></div>
-            <div>Hand: <span className="text-yellow-400">{handDetected ? 'detected' : 'none'}</span></div>
-            {detectedGestureName && (
-              <div>Gesture: <span className="text-blue-400">{detectedGestureName}</span></div>
-            )}
-            {confidence > 0 && (
-              <div>Conf: <span className="text-purple-400">{(confidence * 100).toFixed(0)}%</span></div>
-            )}
-          </div>
-        )}
+        {/* Debug Overlay */}
+        <div className="absolute top-12 left-2 bg-black/80 text-white px-3 py-2 rounded-lg text-xs font-mono">
+          <div>Status: <span className="text-green-400">{detectionStatus || 'waiting'}</span></div>
+          <div>Hand: <span className="text-yellow-400">{handDetected ? 'detected' : 'none'}</span></div>
+          {detectedGestureName && (
+            <div>Gesture: <span className="text-blue-400">{detectedGestureName}</span></div>
+          )}
+          {confidence > 0 && (
+            <div>Conf: <span className="text-purple-400">{(confidence * 100).toFixed(0)}%</span></div>
+          )}
+        </div>
 
         {/* Detection Status */}
         <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent px-3 py-3 space-y-1">
-          {/* Speech Recognition Status */}
-          {isListening && (
+          {requiredObject && (
             <div className="text-center mb-2">
-              <p className="text-blue-300 font-dm-sans text-sm font-bold animate-pulse">
-                🎤 Listening... {transcript && `"${transcript}"`}
+              <p className="text-yellow-300 font-dm-sans text-xs font-bold animate-pulse">
+                📦 Find: {requiredObject.toUpperCase()}
               </p>
-            </div>
-          )}
-
-          {/* Skip button for demo backup */}
-          {requiredAction && (
-            <div className="flex justify-end">
-              <Button size="sm" variant="secondary" onClick={() => onGestureDetected(requiredAction!)}>
-                Skip Gesture
-              </Button>
             </div>
           )}
           
           {requiredAction && !handDetected && (
-            <div className="text-center">
-              <p className="text-white font-fredoka text-base md:text-lg animate-pulse">
-                Show your hand to the camera! 👋
-              </p>
-              <p className="text-white/80 font-dm-sans text-[11px] md:text-xs mt-1">
-                Tip: Move closer and ensure your hand is well-lit.
-              </p>
-            </div>
+            <p className="text-white font-dm-sans text-xs text-center animate-pulse">
+              Show me your hand! 🤚
+            </p>
           )}
           {requiredAction && handDetected && detectionStatus === "" && (
             <p className="text-white font-dm-sans text-xs text-center">
@@ -380,6 +347,24 @@ export const WebcamFeed = ({ isActive, requiredAction, onGestureDetected, onSpee
             </p>
           )}
           
+          {/* Detected objects */}
+          {detectedObjects.length > 0 && (
+            <div className="flex flex-wrap gap-1 justify-center">
+              {detectedObjects.slice(0, 3).map((obj, idx) => (
+                <span 
+                  key={idx}
+                  className={`px-2 py-0.5 rounded text-[10px] font-dm-sans ${
+                    requiredObject && obj.class.toLowerCase().includes(requiredObject.toLowerCase())
+                      ? 'bg-green-500/80 text-white font-bold animate-pulse'
+                      : 'bg-yellow-500/60 text-white'
+                  }`}
+                >
+                  {obj.class}
+                </span>
+              ))}
+            </div>
+          )}
+          
           {/* Confidence meter */}
           {confidence > 0 && (
             <div className="mt-1 h-1 bg-white/20 rounded-full overflow-hidden">
@@ -392,7 +377,7 @@ export const WebcamFeed = ({ isActive, requiredAction, onGestureDetected, onSpee
         </div>
 
         {/* Privacy footer */}
-        <div className="absolute bottom-0 left-0 right-0 bg-black/60 px-2 py-1 text-center" style={{ marginBottom: '60px' }}>
+        <div className="absolute bottom-0 left-0 right-0 bg-black/60 px-2 py-1 text-center" style={{ marginBottom: requiredObject ? '80px' : '60px' }}>
           <p className="text-white/80 font-dm-sans text-[10px]">
             No videos saved. No data sent to cloud.
           </p>

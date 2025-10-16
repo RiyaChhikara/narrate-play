@@ -8,7 +8,7 @@ interface DialogueLine {
 }
 
 interface Participation {
-  type: 'choice' | 'word' | 'gesture' | 'speech';
+  type: 'choice' | 'word' | 'gesture' | 'object';
   speaker: string;
   prompt: string;
   targetWord: string;
@@ -28,96 +28,81 @@ export interface Story {
   scenes: StoryScene[];
 }
 
-// Enhanced "Enchanted Forest" story
+// Instant fallback story for demos
 const DEMO_STORY: Story = {
-  title: "The Enchanted Forest",
+  title: "The Magic Cloud Adventure",
   scenes: [
     {
       sceneNumber: 1,
       narration: [
         {
           speaker: "Mom",
-          text: "Welcome, brave explorer! You've entered the Enchanted Forest where magic is real.",
+          text: "Once upon a time, a friendly CLOUD floated in the sky.",
           emotion: "warm"
         },
         {
           speaker: "Dad",
-          text: "Look! A friendly forest fairy appears in a shimmer of light. She needs your help!",
+          text: "Look! The cloud sees you and wants to say hello!",
           emotion: "excited"
-        },
-        {
-          speaker: "Mom",
-          text: "The fairy says: 'Hello dear friend! I've lost my way. Can you help me?'",
-          emotion: "gentle"
         }
       ],
       participation: {
         type: "gesture",
-        speaker: "Dad",
-        prompt: "Show the fairy you're friendly! Can you WAVE hello?",
-        targetWord: "fairy",
+        speaker: "Mom",
+        prompt: "Can you WAVE hello to the cloud?",
+        targetWord: "cloud",
         expectedResponses: ["wave"]
       },
-      ambiance: "forest_sounds",
-      music: "magical_forest"
+      ambiance: "sky_sounds",
+      music: "gentle_clouds"
     },
     {
       sceneNumber: 2,
       narration: [
         {
           speaker: "Mom",
-          text: "The fairy claps her hands with joy! You're so kind!",
-          emotion: "happy"
+          text: "The cloud waved back! It's so happy to meet you!",
+          emotion: "joyful"
         },
         {
           speaker: "Dad",
-          text: "She whispers a secret: 'Deep in the forest, there's a hidden TREASURE that can light up the dark paths.'",
+          text: "Now it wants to show you a beautiful TREASURE on the left.",
           emotion: "mysterious"
-        },
-        {
-          speaker: "Mom",
-          text: "But first, we need to know... what's your favorite thing to find on an adventure?",
-          emotion: "curious"
         }
       ],
       participation: {
-        type: "speech",
-        speaker: "Dad",
-        prompt: "Tell us: Do you like finding treasures, animals, or magical flowers?",
+        type: "object",
+        speaker: "Mom",
+        prompt: "Can you find something BLUE and show it to us?",
         targetWord: "treasure",
-        expectedResponses: ["treasure", "animals", "flowers", "gold", "crystals"]
+        expectedResponses: ["blue"]
       },
-      ambiance: "mystery_sounds",
-      music: "adventure_theme"
+      ambiance: "magic_sparkles",
+      music: "discovery_theme"
     },
     {
       sceneNumber: 3,
       narration: [
         {
           speaker: "Dad",
-          text: "Perfect choice! The fairy leads you through sparkling trees to a glowing chest!",
-          emotion: "excited"
+          text: "Amazing! You found the blue treasure!",
+          emotion: "proud"
         },
         {
           speaker: "Mom",
-          text: "Inside is the most beautiful RAINBOW crystal you've ever seen! It glows with all the colors!",
-          emotion: "amazed"
-        },
-        {
-          speaker: "Dad",
-          text: "The fairy smiles and says: 'You did it! Now the forest can shine bright again!'",
-          emotion: "proud"
+          text: "The treasure opens to reveal a magical RAINBOW!",
+          emotion: "wonder"
         }
       ],
       participation: {
         type: "gesture",
-        speaker: "Mom",
-        prompt: "The forest celebrates! Can you give a big THUMBS UP for saving the day?",
-        targetWord: "crystal",
-        expectedResponses: ["thumbsup", "clap"]
+        speaker: "Dad",
+        prompt: "Can you JUMP for joy with the rainbow?",
+        targetWord: "rainbow",
+        expectedResponses: ["jump"]
       },
-      ambiance: "celebration_sounds",
-      music: "victory_theme"
+      ambiance: "rainbow_magic",
+      music: "celebration"
     }
   ]
 };

@@ -62,17 +62,7 @@ const HeroSection = () => {
           Your voice. Your hero.
         </p>
 
-        <div className="mt-6 bg-black/40 backdrop-blur-md rounded-2xl p-5 text-off-white">
-          <p className="font-dm-sans text-base md:text-lg">Interactive speech therapy for neurodivergent children</p>
-          <ul className="mt-2 space-y-1 text-sm md:text-base">
-            <li>🗣️ Practice words through storytelling</li>
-            <li>🤲 Learn through physical gestures</li>
-            <li>👀 Engage multiple senses</li>
-            <li>❤️ Told in your family's voice</li>
-          </ul>
-        </div>
-
-        <p className="font-dm-sans text-sm text-off-white/90 mt-4 drop-shadow-[0_2px_6px_rgba(0,0,0,0.6)]">
+        <p className="font-dm-sans text-sm text-off-white/90 mt-6 drop-shadow-[0_2px_6px_rgba(0,0,0,0.6)]">
           Ages 4-7 • Multilingual • For neurodivergent children
         </p>
 

@@ -69,9 +69,9 @@ serve(async (req) => {
 
 PARTICIPATION TYPES (rotate through these):
 - "gesture": Ask child to perform a physical action (${gestures.slice(0, 3).join(', ')})
-- "speech": Ask child an open-ended question (favorite color, choice between options, etc.)
-  Example: "What's your favorite color?" or "Do you like books or toys better?"
-  The story will adapt to whatever they say!
+- "word": Ask child to repeat a magic word in both languages
+- "choice": Ask child to make a choice
+- "object": Ask child to find/show something
 
 Return ONLY valid JSON in this exact format:
 {
@@ -92,10 +92,11 @@ Return ONLY valid JSON in this exact format:
         }
       ],
       "participation": {
-        "type": "speech",
+        "type": "choice",
         "speaker": "Mom",
-        "prompt": "What's your favorite color?",
-        "targetWord": "treasure"
+        "prompt": "What COLOR do you think the treasure chest is?",
+        "targetWord": "treasure",
+        "expectedResponses": ["blue", "red", "green", "gold"]
       },
       "ambiance": "forest_sounds",
       "music": "gentle_adventure"

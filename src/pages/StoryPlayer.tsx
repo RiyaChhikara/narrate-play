@@ -77,15 +77,20 @@ const StoryPlayer = () => {
 
   // Play scene narration when scene changes
   useEffect(() => {
-    if (!currentScene || isGeneratingStory) return;
+    if (!currentScene || isGeneratingStory || isPlayingAudio) return;
 
     const playSceneNarration = async () => {
       setIsPlayingAudio(true);
       setState("passive");
+      setGestureDetected(false);
+      setSpeechDetected(false);
 
       try {
+        console.log(`Playing scene ${sceneIndex + 1} narration`);
+        
         // Play each dialogue line in sequence
         for (const line of currentScene.narration) {
+          console.log(`Playing line: "${line.text}"`);
           const audioBase64 = await generateAudio(line.text, line.speaker, line.emotion);
           
           if (audioBase64) {
@@ -95,13 +100,14 @@ const StoryPlayer = () => {
           }
         }
 
+        console.log('Narration complete, checking participation');
+        
         // After narration, show participation prompt
-        setState("action");
-        setGestureDetected(false);
-        setSpeechDetected(false);
-
-        // Play participation prompt
         if (currentScene.participation) {
+          setState("action");
+          
+          // Play participation prompt
+          console.log(`Playing prompt: "${currentScene.participation.prompt}"`);
           const promptAudio = await generateAudio(
             currentScene.participation.prompt,
             currentScene.participation.speaker,
@@ -112,6 +118,8 @@ const StoryPlayer = () => {
             setNarrationText(currentScene.participation.prompt);
             await playAudioFromBase64(promptAudio);
           }
+          
+          console.log('Now waiting for user response...');
         }
 
       } catch (error) {
@@ -122,7 +130,7 @@ const StoryPlayer = () => {
     };
 
     playSceneNarration();
-  }, [sceneIndex, currentScene, isGeneratingStory]);
+  }, [sceneIndex, currentScene?.sceneNumber]); // Only trigger on scene change
 
   const checkSceneCompletion = () => {
     if (!currentScene?.participation) return false;
@@ -138,8 +146,14 @@ const StoryPlayer = () => {
     return false;
   };
 
+  // Check for scene completion
   useEffect(() => {
-    if (state === "action" && checkSceneCompletion()) {
+    if (state !== "action") return;
+    
+    const isComplete = checkSceneCompletion();
+    console.log('Checking completion:', { state, gestureDetected, speechDetected, isComplete });
+    
+    if (isComplete) {
       handleSceneComplete();
     }
   }, [gestureDetected, speechDetected, state]);
@@ -161,8 +175,12 @@ const StoryPlayer = () => {
   };
 
   const handleSpeechDetected = async (text: string) => {
+    console.log('Speech detected:', { text, state, speechDetected });
+    
     if (state === "action" && !speechDetected) {
       setSpeechDetected(true);
+      
+      console.log(`✅ Speech accepted: "${text}"`);
       
       toast({
         title: "🗣️ Great job!",
@@ -172,6 +190,7 @@ const StoryPlayer = () => {
   };
 
   const handleSceneComplete = async () => {
+    console.log('Scene complete! Moving to success state');
     setState("success");
     setShowConfetti(true);
 
@@ -193,13 +212,17 @@ const StoryPlayer = () => {
 
     // Wait for celebration animation
     setTimeout(() => {
+      console.log('Moving to next scene or ending story');
       setShowConfetti(false);
+      
       if (sceneIndex < storyScenes.length - 1) {
+        console.log(`Advancing to scene ${sceneIndex + 2}`);
         setSceneIndex(sceneIndex + 1);
         setState("passive");
         setGestureDetected(false);
         setSpeechDetected(false);
       } else {
+        console.log('Story complete!');
         toast({
           title: "🎊 Story Complete!",
           description: "Have a big smile.",

@@ -5,6 +5,9 @@ import { WebcamFeed } from "@/components/WebcamFeed";
 import { useToast } from "@/hooks/use-toast";
 import { useStoryGeneration, type StoryScene } from "@/hooks/useStoryGeneration";
 import { useAudioGeneration } from "@/hooks/useAudioGeneration";
+import { Confetti } from "@/components/Confetti";
+import { SceneBackground } from "@/components/SceneBackground";
+import { ProgressPath } from "@/components/ProgressPath";
 
 type StoryState = "passive" | "action" | "success";
 
@@ -24,6 +27,7 @@ const StoryPlayer = () => {
   const [storyScenes, setStoryScenes] = useState<StoryScene[]>([]);
   const [isGeneratingStory, setIsGeneratingStory] = useState(true);
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const currentScene = storyScenes[sceneIndex];
@@ -152,6 +156,7 @@ const StoryPlayer = () => {
     // For gesture type, check if detected gesture matches
     if (type === 'gesture') {
       setGestureDetected(true);
+      setShowConfetti(true);
       
       toast({
         title: "🎉 Perfect gesture!",
@@ -163,6 +168,7 @@ const StoryPlayer = () => {
   const handleObjectDetected = async (object: string) => {
     if (state === "action" && !objectDetected) {
       setObjectDetected(true);
+      setShowConfetti(true);
       
       toast({
         title: "✨ Found it!",
@@ -276,22 +282,59 @@ const StoryPlayer = () => {
   // Show loading state while generating story
   if (isGeneratingStory || storyScenes.length === 0) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-400 via-pink-300 to-orange-200 flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="w-16 h-16 text-white animate-spin mx-auto mb-4" />
-          <h2 className="font-fredoka text-3xl font-bold text-white mb-2">
+      <div className="min-h-screen bg-gradient-to-br from-purple-600 via-purple-700 to-blue-800 flex items-center justify-center relative overflow-hidden">
+        {/* Animated floating elements */}
+        <div className="absolute inset-0 pointer-events-none">
+          {[...Array(15)].map((_, i) => (
+            <div
+              key={i}
+              className="absolute text-4xl animate-float opacity-30"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+                animationDelay: `${Math.random() * 3}s`,
+                animationDuration: `${3 + Math.random() * 2}s`,
+              }}
+            >
+              {['☁️', '⭐', '✨', '🌙', '🌟'][Math.floor(Math.random() * 5)]}
+            </div>
+          ))}
+        </div>
+
+        <div className="text-center z-10 px-4">
+          <div className="relative mb-8">
+            <Loader2 className="w-20 h-20 text-white animate-spin mx-auto" />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-24 h-24 border-4 border-hero-orange/30 rounded-full animate-pulse" />
+            </div>
+          </div>
+          <h2 className="font-fredoka text-4xl font-bold text-white mb-4 animate-pulse">
             Creating Your Magical Story...
           </h2>
-          <p className="font-dm-sans text-white/80">
+          <p className="font-dm-sans text-xl text-white/90 mb-6">
             Preparing characters and adventures just for you! ✨
           </p>
+          <div className="flex gap-2 justify-center">
+            {[...Array(3)].map((_, i) => (
+              <div
+                key={i}
+                className="w-3 h-3 bg-hero-orange rounded-full animate-bounce"
+                style={{ animationDelay: `${i * 0.2}s` }}
+              />
+            ))}
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-400 via-pink-300 to-orange-200 relative overflow-hidden">
+    <div className="min-h-screen relative overflow-hidden">
+      {/* Animated scene background */}
+      <SceneBackground sceneNumber={sceneIndex + 1} />
+
+      {/* Confetti effect */}
+      <Confetti active={showConfetti} onComplete={() => setShowConfetti(false)} />
       {/* Floating stars */}
       <div className="absolute inset-0 pointer-events-none">
         {[...Array(20)].map((_, i) => (
@@ -344,9 +387,15 @@ const StoryPlayer = () => {
           {/* Left side: Story prompt (60%) */}
           {state === "action" && currentScene?.participation && (
             <div className="flex-[0.6] flex items-center justify-center">
-              <div className="bg-white rounded-3xl px-12 py-10 shadow-[0_0_40px_rgba(255,140,66,0.4)] border-4 border-hero-orange text-center animate-scale-in max-w-2xl">
+              <div className="bg-white rounded-3xl px-12 py-10 shadow-[0_0_60px_rgba(255,140,66,0.6)] border-4 border-hero-orange text-center animate-[slide-in-bottom_0.5s_ease-out] max-w-2xl relative">
+                {/* Glowing border animation */}
+                <div className="absolute inset-0 rounded-3xl border-4 border-hero-orange animate-pulse opacity-50" />
+                
+                {/* Pulsing outer glow */}
+                <div className="absolute inset-0 rounded-3xl bg-hero-orange/20 animate-ping" style={{ animationDuration: '2s' }} />
+                
                 {currentScene.participation.type === 'object' ? (
-                  <>
+                  <div className="relative z-10">
                     <div className="text-8xl mb-4 animate-bounce">📦</div>
                     <h2 className="font-fredoka text-4xl font-bold text-deep-navy mb-2">
                       {currentScene.participation.prompt}
@@ -357,19 +406,19 @@ const StoryPlayer = () => {
                     <p className="font-dm-sans text-sm text-muted-foreground/70">
                       Show it to the camera! 📹✨
                     </p>
-                  </>
+                  </div>
                 ) : currentScene.participation.type === 'gesture' ? (
-                  <>
-                    <div className="text-8xl mb-4 animate-bounce">✨</div>
+                  <div className="relative z-10">
+                    <div className="text-8xl mb-4 animate-[bounce_1s_ease-in-out_infinite]">✨</div>
                     <h2 className="font-fredoka text-4xl font-bold text-deep-navy mb-2">
                       {currentScene.participation.prompt}
                     </h2>
                     <p className="font-dm-sans text-lg text-muted-foreground mb-2">
                       Show me your move!
                     </p>
-                  </>
+                  </div>
                 ) : (
-                  <>
+                  <div className="relative z-10">
                     <div className="text-8xl mb-4 animate-pulse">💭</div>
                     <h2 className="font-fredoka text-3xl font-bold text-deep-navy mb-2">
                       {currentScene.participation.prompt}
@@ -388,7 +437,7 @@ const StoryPlayer = () => {
                         ))}
                       </div>
                     )}
-                  </>
+                  </div>
                 )}
               </div>
             </div>
@@ -407,29 +456,15 @@ const StoryPlayer = () => {
         </div>
       </div>
 
-      {/* Progress dots */}
-      <div className="absolute bottom-32 left-1/2 -translate-x-1/2 flex gap-2 z-20">
-        {storyScenes.map((_, idx) => (
-          <div
-            key={idx}
-            className={`w-3 h-3 rounded-full transition-all duration-300 ${
-              idx === sceneIndex
-                ? 'bg-hero-orange w-8 shadow-lg shadow-hero-orange/50'
-                : idx < sceneIndex
-                ? 'bg-green-400'
-                : 'bg-white/50'
-            }`}
-          />
-        ))}
-      </div>
-
+      {/* Progress path with icons */}
+      <ProgressPath currentScene={sceneIndex + 1} totalScenes={storyScenes.length} />
 
       {state === "success" && (
-        <div className="absolute inset-0 z-30 flex items-center justify-center bg-green-500/20 backdrop-blur-sm animate-fade-in">
-          <div className="text-center">
-            <div className="text-9xl animate-bounce">🎉</div>
-            <h2 className="font-fredoka text-5xl font-bold text-white drop-shadow-lg mt-4">
-              You did it!
+        <div className="absolute inset-0 z-30 flex items-center justify-center bg-gradient-to-br from-green-400/30 via-blue-400/30 to-purple-400/30 backdrop-blur-md animate-fade-in">
+          <div className="text-center relative">
+            <div className="text-9xl animate-[bounce_0.6s_ease-in-out_infinite]">🎉</div>
+            <h2 className="font-fredoka text-6xl font-bold text-white drop-shadow-[0_0_20px_rgba(255,255,255,0.8)] mt-4 animate-pulse">
+              Amazing!
             </h2>
             {[...Array(10)].map((_, i) => (
               <div

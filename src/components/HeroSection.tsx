@@ -63,41 +63,39 @@ const HeroSection = () => {
         </p>
 
         {/* Value Proposition Panel */}
-        <div className="mt-8 bg-white/95 backdrop-blur-xl rounded-3xl p-8 border border-white/30 shadow-[0_8px_32px_rgba(0,0,0,0.3)] transition-all duration-300 hover:shadow-[0_12px_48px_rgba(0,0,0,0.4)]">
-          <p className="font-dm-sans text-lg text-deep-navy mb-5 font-semibold">
+        <div className="max-w-lg mt-8 bg-white/95 backdrop-blur-xl rounded-3xl p-6 sm:p-8 border border-white/30 shadow-[0_8px_32px_rgba(0,0,0,0.3)] transition-all duration-300 hover:shadow-[0_12px_48px_rgba(0,0,0,0.4)]">
+          <p className="font-dm-sans text-base sm:text-lg text-deep-navy mb-4 font-semibold">
             Interactive speech therapy for kids
           </p>
-          <div className="space-y-3">
-            <div className="flex items-start gap-4">
-              <span className="text-2xl">🗣️</span>
-              <p className="font-dm-sans text-deep-navy/80 text-base leading-relaxed">Practice words through storytelling</p>
+          <div className="space-y-2.5">
+            <div className="flex items-start gap-3">
+              <span className="text-xl">🗣️</span>
+              <p className="font-dm-sans text-deep-navy/80 text-sm sm:text-base leading-relaxed">Practice words through storytelling</p>
             </div>
-            <div className="flex items-start gap-4">
-              <span className="text-2xl">🤲</span>
-              <p className="font-dm-sans text-deep-navy/80 text-base leading-relaxed">Learn through physical gestures</p>
+            <div className="flex items-start gap-3">
+              <span className="text-xl">🤲</span>
+              <p className="font-dm-sans text-deep-navy/80 text-sm sm:text-base leading-relaxed">Learn through physical gestures</p>
             </div>
-            <div className="flex items-start gap-4">
-              <span className="text-2xl">👀</span>
-              <p className="font-dm-sans text-deep-navy/80 text-base leading-relaxed">Engage multiple senses</p>
+            <div className="flex items-start gap-3">
+              <span className="text-xl">👀</span>
+              <p className="font-dm-sans text-deep-navy/80 text-sm sm:text-base leading-relaxed">Engage multiple senses</p>
             </div>
-            <div className="flex items-start gap-4">
-              <span className="text-2xl">❤️</span>
-              <p className="font-dm-sans text-deep-navy/80 text-base leading-relaxed">Told in your family's voice</p>
+            <div className="flex items-start gap-3">
+              <span className="text-xl">❤️</span>
+              <p className="font-dm-sans text-deep-navy/80 text-sm sm:text-base leading-relaxed">Told in your family's voice</p>
             </div>
           </div>
         </div>
 
-        <p className="font-dm-sans text-sm text-off-white/95 mt-8 drop-shadow-[0_2px_8px_rgba(0,0,0,0.7)] font-medium tracking-wide">
-          Ages 4-7 • Multilingual
-        </p>
-
-        <Button 
-          size="lg"
-          onClick={() => navigate("/stories")}
-          className="bg-hero-orange hover:bg-hero-orange/90 text-white px-12 py-6 rounded-full font-fredoka text-xl font-semibold hover:scale-105 transition-all duration-300 shadow-[0_8px_24px_rgba(255,140,66,0.5)] hover:shadow-[0_12px_32px_rgba(255,140,66,0.7)] mt-10"
-        >
-          Start Your Adventure →
-        </Button>
+        <div className="max-w-lg mt-6">
+          <Button 
+            size="lg"
+            onClick={() => navigate("/stories")}
+            className="w-full bg-hero-orange hover:bg-hero-orange/90 text-white px-12 py-6 rounded-full font-fredoka text-xl font-semibold hover:scale-105 transition-all duration-300 shadow-[0_8px_24px_rgba(255,140,66,0.5)] hover:shadow-[0_12px_32px_rgba(255,140,66,0.7)]"
+          >
+            Start Your Adventure →
+          </Button>
+        </div>
       </div>
 
       <MagicalCursor parallax={parallax} />

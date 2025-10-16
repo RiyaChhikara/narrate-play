@@ -343,7 +343,7 @@ const StoryPlayer = () => {
                     <h2 className="font-fredoka text-2xl sm:text-3xl md:text-4xl font-bold mb-2">
                       {currentScene.participation.prompt}
                     </h2>
-                    <p className="font-dm-sans text-base sm:text-lg text-white/80 mb-2">
+                    <p className="font-dm-sans text-base sm:text-lg text-white/50 mb-2">
                       Show me your move
                     </p>
                   </>
@@ -353,7 +353,7 @@ const StoryPlayer = () => {
                     <h2 className="font-fredoka text-2xl sm:text-3xl md:text-4xl font-bold mb-2">
                       {currentScene.participation.prompt}
                     </h2>
-                    <p className="font-dm-sans text-base sm:text-lg text-white/80">
+                    <p className="font-dm-sans text-base sm:text-lg text-white/50">
                       Say it out loud
                     </p>
                     {currentScene.participation.expectedResponses && (
@@ -389,7 +389,7 @@ const StoryPlayer = () => {
 
       {/* Enhanced Progress Indicator - Visual Journey */}
       <div className="absolute bottom-72 left-1/2 -translate-x-1/2 z-20 pointer-events-none">
-        <div className="flex items-center gap-4 bg-white/90 backdrop-blur-md px-8 py-4 rounded-full shadow-2xl">
+        <div className="flex items-center gap-4 bg-black/40 backdrop-blur-md px-8 py-4 rounded-full shadow-2xl">
           {storyScenes.map((_, idx) => (
             <div key={idx} className="flex items-center">
               <div
@@ -405,7 +405,7 @@ const StoryPlayer = () => {
                       ? 'bg-green-400 text-white scale-100'
                       : idx === sceneIndex
                       ? 'bg-hero-orange text-white shadow-lg shadow-hero-orange/50'
-                      : 'bg-gray-200 text-gray-400'
+                      : 'bg-white/30 text-white/60'
                   }`}
                 >
                   {idx < sceneIndex ? '✓' : idx + 1}
@@ -417,7 +417,7 @@ const StoryPlayer = () => {
               {idx < storyScenes.length - 1 && (
                 <div
                   className={`w-12 h-1 mx-2 rounded-full transition-all duration-500 ${
-                    idx < sceneIndex ? 'bg-green-400' : 'bg-gray-200'
+                    idx < sceneIndex ? 'bg-green-400' : 'bg-white/20'
                   }`}
                 />
               )}

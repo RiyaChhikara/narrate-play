@@ -54,17 +54,17 @@ export const SceneBackground = ({ sceneNumber, totalScenes }: SceneBackgroundPro
       {/* Animated Scene Elements */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         {sceneNumber === 0 && (
-          // Forest: Floating leaves
+          // Forest: Subtle floating leaves
           <>
-            {[...Array(6)].map((_, i) => (
+            {[...Array(3)].map((_, i) => (
               <div
                 key={i}
-                className="absolute text-4xl opacity-40 animate-float"
+                className="absolute text-3xl opacity-30 animate-float"
                 style={{
-                  left: `${Math.random() * 100}%`,
-                  top: `${Math.random() * 100}%`,
-                  animationDelay: `${Math.random() * 5}s`,
-                  animationDuration: `${5 + Math.random() * 3}s`,
+                  left: `${20 + i * 30}%`,
+                  top: `${20 + i * 20}%`,
+                  animationDelay: `${i * 2}s`,
+                  animationDuration: `${8 + i}s`,
                 }}
               >
                 🍃
@@ -74,16 +74,17 @@ export const SceneBackground = ({ sceneNumber, totalScenes }: SceneBackgroundPro
         )}
         
         {sceneNumber === 1 && (
-          // Treasure: Sparkles
+          // Treasure: Gentle sparkles
           <>
-            {[...Array(12)].map((_, i) => (
+            {[...Array(4)].map((_, i) => (
               <div
                 key={i}
-                className="absolute text-2xl opacity-60 animate-pulse"
+                className="absolute text-xl opacity-40"
                 style={{
-                  left: `${Math.random() * 100}%`,
-                  top: `${Math.random() * 100}%`,
-                  animationDelay: `${Math.random() * 2}s`,
+                  left: `${25 + i * 20}%`,
+                  top: `${30 + i * 15}%`,
+                  animation: `pulse ${3 + i}s ease-in-out infinite`,
+                  animationDelay: `${i * 0.8}s`,
                 }}
               >
                 ✨
@@ -93,17 +94,17 @@ export const SceneBackground = ({ sceneNumber, totalScenes }: SceneBackgroundPro
         )}
         
         {sceneNumber === 2 && (
-          // Crystal: Stars
+          // Crystal: Subtle stars
           <>
-            {[...Array(15)].map((_, i) => (
+            {[...Array(5)].map((_, i) => (
               <div
                 key={i}
-                className="absolute text-xl opacity-70 animate-ping"
+                className="absolute text-lg opacity-50"
                 style={{
-                  left: `${Math.random() * 100}%`,
-                  top: `${Math.random() * 100}%`,
-                  animationDelay: `${Math.random() * 3}s`,
-                  animationDuration: `${2 + Math.random() * 2}s`,
+                  left: `${15 + i * 20}%`,
+                  top: `${25 + i * 15}%`,
+                  animation: `pulse ${4 + i * 0.5}s ease-in-out infinite`,
+                  animationDelay: `${i * 0.6}s`,
                 }}
               >
                 ⭐
@@ -113,20 +114,20 @@ export const SceneBackground = ({ sceneNumber, totalScenes }: SceneBackgroundPro
         )}
         
         {sceneNumber === 3 && (
-          // Rainbow: Colorful confetti
+          // Rainbow: Gentle celebration
           <>
-            {[...Array(20)].map((_, i) => (
+            {[...Array(6)].map((_, i) => (
               <div
                 key={i}
-                className="absolute text-3xl opacity-80 animate-float"
+                className="absolute text-2xl opacity-60 animate-float"
                 style={{
-                  left: `${Math.random() * 100}%`,
-                  top: `${Math.random() * 100}%`,
-                  animationDelay: `${Math.random() * 2}s`,
-                  animationDuration: `${3 + Math.random() * 2}s`,
+                  left: `${10 + i * 15}%`,
+                  top: `${20 + i * 12}%`,
+                  animationDelay: `${i * 0.5}s`,
+                  animationDuration: `${5 + i * 0.5}s`,
                 }}
               >
-                {['🌈', '🎉', '⭐', '✨'][Math.floor(Math.random() * 4)]}
+                {['🌈', '✨', '⭐'][i % 3]}
               </div>
             ))}
           </>

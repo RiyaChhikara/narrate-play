@@ -33,8 +33,8 @@ export const ConfettiCanvas = () => {
     const particles: Particle[] = [];
 
     // Create particles
-    // Responsive particle count
-    const particleCount = window.innerWidth < 640 ? 30 : window.innerWidth < 1024 ? 40 : 50;
+    // Reduced particle count for less overstimulation
+    const particleCount = window.innerWidth < 640 ? 8 : window.innerWidth < 1024 ? 12 : 15;
     for (let i = 0; i < particleCount; i++) {
       particles.push({
         x: Math.random() * canvas.width,

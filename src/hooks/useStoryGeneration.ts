@@ -28,81 +28,96 @@ export interface Story {
   scenes: StoryScene[];
 }
 
-// Instant fallback story for demos
+// Enhanced "Enchanted Forest" story
 const DEMO_STORY: Story = {
-  title: "The Magic Cloud Adventure",
+  title: "The Enchanted Forest",
   scenes: [
     {
       sceneNumber: 1,
       narration: [
         {
           speaker: "Mom",
-          text: "Once upon a time, a friendly CLOUD floated in the sky.",
+          text: "Welcome, brave explorer! You've entered the Enchanted Forest where magic is real.",
           emotion: "warm"
         },
         {
           speaker: "Dad",
-          text: "Look! The cloud sees you and wants to say hello!",
+          text: "Look! A friendly forest fairy appears in a shimmer of light. She needs your help!",
           emotion: "excited"
+        },
+        {
+          speaker: "Mom",
+          text: "The fairy says: 'Hello dear friend! I've lost my way. Can you help me?'",
+          emotion: "gentle"
         }
       ],
       participation: {
         type: "gesture",
-        speaker: "Mom",
-        prompt: "Can you WAVE hello to the cloud?",
-        targetWord: "cloud",
+        speaker: "Dad",
+        prompt: "Show the fairy you're friendly! Can you WAVE hello?",
+        targetWord: "fairy",
         expectedResponses: ["wave"]
       },
-      ambiance: "sky_sounds",
-      music: "gentle_clouds"
+      ambiance: "forest_sounds",
+      music: "magical_forest"
     },
     {
       sceneNumber: 2,
       narration: [
         {
           speaker: "Mom",
-          text: "The cloud waved back! It's so happy to meet you!",
-          emotion: "joyful"
+          text: "The fairy claps her hands with joy! You're so kind!",
+          emotion: "happy"
         },
         {
           speaker: "Dad",
-          text: "Now it wants to show you a beautiful TREASURE on the left.",
+          text: "She whispers a secret: 'Deep in the forest, there's a hidden TREASURE that can light up the dark paths.'",
           emotion: "mysterious"
+        },
+        {
+          speaker: "Mom",
+          text: "But first, we need to know... what's your favorite thing to find on an adventure?",
+          emotion: "curious"
         }
       ],
       participation: {
         type: "speech",
-        speaker: "Mom",
-        prompt: "What's your favorite color?",
+        speaker: "Dad",
+        prompt: "Tell us: Do you like finding treasures, animals, or magical flowers?",
         targetWord: "treasure",
-        expectedResponses: ["blue", "red", "green", "yellow"]
+        expectedResponses: ["treasure", "animals", "flowers", "gold", "crystals"]
       },
-      ambiance: "magic_sparkles",
-      music: "discovery_theme"
+      ambiance: "mystery_sounds",
+      music: "adventure_theme"
     },
     {
       sceneNumber: 3,
       narration: [
         {
           speaker: "Dad",
-          text: "Amazing! You found the blue treasure!",
-          emotion: "proud"
+          text: "Perfect choice! The fairy leads you through sparkling trees to a glowing chest!",
+          emotion: "excited"
         },
         {
           speaker: "Mom",
-          text: "The treasure opens to reveal a magical RAINBOW!",
-          emotion: "wonder"
+          text: "Inside is the most beautiful RAINBOW crystal you've ever seen! It glows with all the colors!",
+          emotion: "amazed"
+        },
+        {
+          speaker: "Dad",
+          text: "The fairy smiles and says: 'You did it! Now the forest can shine bright again!'",
+          emotion: "proud"
         }
       ],
       participation: {
         type: "gesture",
-        speaker: "Dad",
-        prompt: "Can you JUMP for joy with the rainbow?",
-        targetWord: "rainbow",
-        expectedResponses: ["jump"]
+        speaker: "Mom",
+        prompt: "The forest celebrates! Can you give a big THUMBS UP for saving the day?",
+        targetWord: "crystal",
+        expectedResponses: ["thumbsup", "clap"]
       },
-      ambiance: "rainbow_magic",
-      music: "celebration"
+      ambiance: "celebration_sounds",
+      music: "victory_theme"
     }
   ]
 };

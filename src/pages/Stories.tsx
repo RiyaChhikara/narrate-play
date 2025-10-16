@@ -16,32 +16,14 @@ interface Story {
   thumbnail: string;
 }
 
-const stories: Story[] = [
-  {
-    id: "forest-adventure",
-    title: "The Enchanted Forest",
-    duration: "5 min",
-    difficulty: "easy",
-    magicWord: "Adventure",
-    thumbnail: "/placeholder.svg",
-  },
-  {
-    id: "treasure-hunt",
-    title: "The Golden Treasure",
-    duration: "7 min",
-    difficulty: "medium",
-    magicWord: "Treasure",
-    thumbnail: "/placeholder.svg",
-  },
-  {
-    id: "dragon-castle",
-    title: "The Brave Dragon Knight",
-    duration: "8 min",
-    difficulty: "hard",
-    magicWord: "Dragon",
-    thumbnail: "/placeholder.svg",
-  },
-];
+const mainStory: Story = {
+  id: "enchanted-forest",
+  title: "The Enchanted Forest",
+  duration: "5 min",
+  difficulty: "easy",
+  magicWord: "Adventure",
+  thumbnail: "/placeholder.svg",
+};
 
 const Stories = () => {
   const navigate = useNavigate();
@@ -95,60 +77,77 @@ const Stories = () => {
           <h1 className="font-fredoka text-4xl font-bold text-off-white">Your Stories</h1>
         </div>
 
-        <div className="mb-8 w-full max-w-2xl mx-auto">
-          <Button
-            onClick={handleGenerateStory}
-            disabled={isLoading}
-            className="w-full bg-hero-orange hover:bg-hero-orange/90 text-white font-fredoka text-xl py-6 rounded-2xl shadow-lg"
+        <div className="w-full max-w-3xl mx-auto space-y-6">
+          {/* Main Story Card - Large and Inviting */}
+          <Card
+            onClick={() => navigate(`/story/${mainStory.id}`)}
+            className="bg-white hover:shadow-2xl transition-all duration-300 cursor-pointer border-4 border-hero-orange hover:scale-[1.02] transform"
           >
-            <Sparkles className="w-6 h-6 mr-2" />
-            {isLoading ? "Creating Magic..." : "Generate New Story"}
-          </Button>
-        </div>
+            <CardHeader className="pb-4">
+              <div 
+                className="w-full h-64 rounded-xl bg-gradient-to-br from-green-400 via-emerald-500 to-green-600 relative overflow-hidden"
+                style={{
+                  backgroundImage: 'url(https://source.unsplash.com/1200x800/?magical-forest,fantasy,enchanted)',
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center'
+                }}
+              >
+                <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent flex items-end justify-center pb-6">
+                  <h2 className="font-fredoka text-4xl font-bold text-white drop-shadow-lg">
+                    {mainStory.title}
+                  </h2>
+                </div>
+                <div className="absolute top-4 right-4 bg-hero-orange/90 backdrop-blur-sm rounded-full px-4 py-2">
+                  <p className="font-fredoka text-lg font-bold text-white">
+                    ✨ Start Adventure
+                  </p>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-6 pb-8">
+              <p className="font-dm-sans text-lg text-gray-700 leading-relaxed">
+                Join a magical journey through an enchanted forest! Meet friendly creatures, discover hidden treasures, and practice your words with gestures and speech. 🌳✨
+              </p>
 
-        <div className="space-y-8">
-          {stories.map((story) => (
-            <div key={story.id} className="w-full max-w-2xl mx-auto">
-              <div className="bg-hero-orange/90 rounded-2xl px-6 py-4 mb-4 text-center shadow-lg">
-                <p className="font-fredoka text-xl font-bold text-white">
-                  Say the magic word: "{story.magicWord}" ✨
-                </p>
+              <div className="flex items-center gap-4 flex-wrap">
+                <Badge
+                  variant="outline"
+                  className={`${getDifficultyColor(mainStory.difficulty)} border-2 font-dm-sans text-base px-4 py-2`}
+                >
+                  <Star className="w-5 h-5 mr-2" />
+                  {mainStory.difficulty.charAt(0).toUpperCase() + mainStory.difficulty.slice(1)}
+                </Badge>
+
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Clock className="w-5 h-5" />
+                  <span className="font-dm-sans text-base">{mainStory.duration}</span>
+                </div>
               </div>
 
-              <Card
-                onClick={() => navigate(`/story/${story.id}`)}
-                className="bg-white hover:shadow-2xl transition-all duration-300 cursor-pointer border-4 border-transparent hover:border-hero-orange"
-              >
-                <CardHeader className="pb-4">
-                  <img
-                    src={story.thumbnail}
-                    alt={story.title}
-                    className="w-full h-48 object-cover rounded-xl"
-                  />
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <h2 className="font-fredoka text-2xl font-bold text-deep-navy">
-                    {story.title}
-                  </h2>
+              <div className="bg-purple-50 border-2 border-purple-200 rounded-xl p-6 text-center">
+                <p className="font-fredoka text-2xl font-bold text-purple-700 mb-2">
+                  🎭 Your Role: The Brave Explorer
+                </p>
+                <p className="font-dm-sans text-base text-purple-600">
+                  Use your voice, gestures, and movements to guide the story!
+                </p>
+              </div>
+            </CardContent>
+          </Card>
 
-                  <div className="flex items-center gap-4 flex-wrap">
-                    <Badge
-                      variant="outline"
-                      className={`${getDifficultyColor(story.difficulty)} border-2 font-dm-sans text-sm px-3 py-1`}
-                    >
-                      <Star className="w-4 h-4 mr-1" />
-                      {story.difficulty.charAt(0).toUpperCase() + story.difficulty.slice(1)}
-                    </Badge>
-
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <Clock className="w-4 h-4" />
-                      <span className="font-dm-sans text-sm">{story.duration}</span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          ))}
+          {/* Generate Custom Story Option */}
+          <div className="text-center">
+            <p className="font-dm-sans text-white/80 mb-4">Want a personalized story?</p>
+            <Button
+              onClick={handleGenerateStory}
+              disabled={isLoading}
+              variant="outline"
+              className="bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white font-fredoka text-lg py-6 px-8 rounded-2xl border-2 border-white/40"
+            >
+              <Sparkles className="w-5 h-5 mr-2" />
+              {isLoading ? "Creating Magic..." : "Generate Custom Story"}
+            </Button>
+          </div>
         </div>
       </div>
 

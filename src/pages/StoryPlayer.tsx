@@ -169,11 +169,7 @@ const StoryPlayer = () => {
     // For gesture type, check if detected gesture matches
     if (type === 'gesture') {
       setGestureDetected(true);
-      
-      toast({
-        title: "Perfect",
-        description: `Well done`,
-      });
+      console.log('✅ Gesture detected and accepted');
     }
   };
 
@@ -182,13 +178,7 @@ const StoryPlayer = () => {
     
     if (state === "action" && !speechDetected) {
       setSpeechDetected(true);
-      
       console.log(`✅ Speech accepted: "${text}"`);
-      
-      toast({
-        title: "Excellent",
-        description: `"${text}"`,
-      });
     }
   };
 

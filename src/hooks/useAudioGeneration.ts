@@ -70,20 +70,27 @@ export const useAudioGeneration = () => {
     }
   };
 
-  const playAudioFromBase64 = (base64Audio: string): Promise<void> => {
+  const playAudioFromBase64 = (base64Audio: string, audioRef?: React.MutableRefObject<HTMLAudioElement | null>): Promise<void> => {
     return new Promise((resolve, reject) => {
       try {
         const audioBlob = base64ToBlob(base64Audio, 'audio/mpeg');
         const audioUrl = URL.createObjectURL(audioBlob);
         const audio = new Audio(audioUrl);
+        
+        // Store reference for cleanup
+        if (audioRef) {
+          audioRef.current = audio;
+        }
 
         audio.onended = () => {
           URL.revokeObjectURL(audioUrl);
+          if (audioRef) audioRef.current = null;
           resolve();
         };
 
         audio.onerror = (error) => {
           URL.revokeObjectURL(audioUrl);
+          if (audioRef) audioRef.current = null;
           reject(error);
         };
 

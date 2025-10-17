@@ -28,6 +28,18 @@ const StoryPlayer = () => {
   const [canListen, setCanListen] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
+  // Cleanup: Stop audio when component unmounts or user navigates away
+  useEffect(() => {
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+        audioRef.current = null;
+      }
+      setIsPlayingAudio(false);
+    };
+  }, []);
+
   const currentScene = storyScenes[sceneIndex];
 
   // Load settings and generate story on mount
@@ -93,7 +105,7 @@ const StoryPlayer = () => {
           
           if (audioBase64) {
             setNarrationText(line.text);
-            await playAudioFromBase64(audioBase64);
+            await playAudioFromBase64(audioBase64, audioRef);
             await new Promise(resolve => setTimeout(resolve, 300)); // Brief pause between lines
           }
         }
@@ -122,7 +134,7 @@ const StoryPlayer = () => {
           
           if (promptAudio) {
             setNarrationText(currentScene.participation.prompt);
-            await playAudioFromBase64(promptAudio);
+            await playAudioFromBase64(promptAudio, audioRef);
           }
           
           console.log('Now waiting for user response...');

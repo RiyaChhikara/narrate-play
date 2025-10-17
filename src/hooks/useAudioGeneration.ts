@@ -1,6 +1,15 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
+// Generate a simple hash for caching
+const hashString = async (str: string): Promise<string> => {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(str);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+};
+
 export const useAudioGeneration = () => {
   const [isLoading, setIsLoading] = useState(false);
 
@@ -12,10 +21,32 @@ export const useAudioGeneration = () => {
     setIsLoading(true);
 
     try {
-      console.log(`Generating audio for: ${speaker}`);
+      // Generate cache key from text + speaker
+      const cacheKey = `${speaker}_${await hashString(text)}`;
+      const filePath = `${cacheKey}.mp3`;
+      
+      console.log(`Checking cache for: ${speaker} - "${text.substring(0, 30)}..."`);
 
+      // Try to get from cache first
+      const { data: existingFile } = await supabase.storage
+        .from('audio-cache')
+        .download(filePath);
+
+      if (existingFile) {
+        console.log('✓ Audio found in cache!');
+        // Convert blob to base64
+        const arrayBuffer = await existingFile.arrayBuffer();
+        const base64Audio = btoa(
+          String.fromCharCode(...new Uint8Array(arrayBuffer))
+        );
+        setIsLoading(false);
+        return base64Audio;
+      }
+
+      // Not in cache, generate via API
+      console.log('✗ Not in cache, generating via API...');
       const { data, error } = await supabase.functions.invoke('generate-audio', {
-        body: { text, speaker, emotion }
+        body: { text, speaker, emotion, cacheKey }
       });
 
       if (error) {
@@ -26,6 +57,7 @@ export const useAudioGeneration = () => {
         throw new Error('No audio data received');
       }
 
+      console.log('✓ Audio generated and cached');
       return data.audioContent;
 
     } catch (err) {

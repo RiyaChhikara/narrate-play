@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.75.0';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -11,7 +12,7 @@ serve(async (req) => {
   }
 
   try {
-    const { text, speaker, emotion } = await req.json();
+    const { text, speaker, emotion, cacheKey } = await req.json();
 
     const elevenLabsKey = Deno.env.get('ELEVENLABS_KEY');
     if (!elevenLabsKey) {
@@ -67,6 +68,33 @@ serve(async (req) => {
     );
 
     console.log('Audio generated successfully');
+
+    // Cache the audio to storage if cacheKey is provided
+    if (cacheKey) {
+      try {
+        const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+        const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+        const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+        const filePath = `${cacheKey}.mp3`;
+        const audioBlob = new Uint8Array(audioBuffer);
+
+        const { error: uploadError } = await supabase.storage
+          .from('audio-cache')
+          .upload(filePath, audioBlob, {
+            contentType: 'audio/mpeg',
+            upsert: true
+          });
+
+        if (uploadError) {
+          console.error('Failed to cache audio:', uploadError);
+        } else {
+          console.log('✓ Audio cached to storage:', filePath);
+        }
+      } catch (cacheError) {
+        console.error('Cache error (non-fatal):', cacheError);
+      }
+    }
 
     return new Response(
       JSON.stringify({ 

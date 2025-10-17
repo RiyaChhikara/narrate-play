@@ -614,9 +614,20 @@ export const WebcamFeed = ({ isActive, requiredAction, requiredObject, enableSpe
         {/* Debug Overlay */}
         <div className="absolute top-12 left-2 bg-black/80 text-white px-3 py-2 rounded-lg text-xs font-mono">
           <div>Status: <span className="text-green-400">{detectionStatus || 'waiting'}</span></div>
-          <div>Hand: <span className="text-yellow-400">{handDetected ? 'detected' : 'none'}</span></div>
-          {detectedGestureName && (
-            <div>Gesture: <span className="text-blue-400">{detectedGestureName}</span></div>
+          {requiredAction === 'smile' ? (
+            <>
+              <div>Face: <span className="text-yellow-400">{faceDetected ? 'detected' : 'none'}</span></div>
+              {detectedGestureName && (
+                <div>Gesture: <span className="text-blue-400">{detectedGestureName}</span></div>
+              )}
+            </>
+          ) : (
+            <>
+              <div>Hand: <span className="text-yellow-400">{handDetected ? 'detected' : 'none'}</span></div>
+              {detectedGestureName && (
+                <div>Gesture: <span className="text-blue-400">{detectedGestureName}</span></div>
+              )}
+            </>
           )}
           {confidence > 0 && (
             <div>Conf: <span className="text-purple-400">{(confidence * 100).toFixed(0)}%</span></div>

@@ -104,6 +104,14 @@ const StoryPlayer = () => {
         if (currentScene.participation) {
           setState("action");
           
+          const type = currentScene.participation.type;
+          
+          // For speech-based participation, start listening immediately
+          if (type === 'word' || type === 'choice') {
+            setCanListen(true);
+            console.log('🎤 Speech listening activated');
+          }
+          
           // Play participation prompt
           console.log(`Playing prompt: "${currentScene.participation.prompt}"`);
           const promptAudio = await generateAudio(
@@ -115,11 +123,6 @@ const StoryPlayer = () => {
           if (promptAudio) {
             setNarrationText(currentScene.participation.prompt);
             await playAudioFromBase64(promptAudio);
-          }
-          
-          const type = currentScene.participation.type;
-          if (type === 'word' || type === 'choice') {
-            setCanListen(true); // Start listening only after prompt is finished
           }
           
           console.log('Now waiting for user response...');
@@ -186,7 +189,7 @@ const StoryPlayer = () => {
     console.log('Scene complete! Moving to success state');
     setState("success");
 
-    // Brief pause
+    // Quick transition
     setTimeout(() => {
       console.log('Moving to next scene or ending story');
       
@@ -198,9 +201,9 @@ const StoryPlayer = () => {
         setSpeechDetected(false);
       } else {
         console.log('Story complete!');
-        setTimeout(() => navigate("/stories"), 1500);
+        setTimeout(() => navigate("/stories"), 1000);
       }
-    }, 800);
+    }, 500);
   };
 
   const generateConversationalResponse = async () => {

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { GestureRecognizer, FilesetResolver, DrawingUtils } from "@mediapipe/tasks-vision";
+import { GestureRecognizer, FilesetResolver, DrawingUtils, FaceLandmarker } from "@mediapipe/tasks-vision";
 import * as cocoSsd from '@tensorflow-models/coco-ssd';
 import '@tensorflow/tfjs';
 import { Eye, EyeOff, Mic } from "lucide-react";
@@ -64,6 +64,7 @@ export const WebcamFeed = ({ isActive, requiredAction, requiredObject, enableSpe
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const gestureRecognizerRef = useRef<GestureRecognizer | null>(null);
+  const faceLandmarkerRef = useRef<FaceLandmarker | null>(null);
   const objectDetectorRef = useRef<cocoSsd.ObjectDetection | null>(null);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const restartTimeoutRef = useRef<number | null>(null);
@@ -87,6 +88,7 @@ export const WebcamFeed = ({ isActive, requiredAction, requiredObject, enableSpe
   const [privacyMode, setPrivacyMode] = useState(false);
   const [detectionStatus, setDetectionStatus] = useState<string>("");
   const [handDetected, setHandDetected] = useState(false);
+  const [faceDetected, setFaceDetected] = useState(false);
   const [confidence, setConfidence] = useState(0);
   const [detectedObjects, setDetectedObjects] = useState<Array<{ class: string; score: number; bbox: number[] }>>([]);
   const [objectFound, setObjectFound] = useState(false);
@@ -266,6 +268,23 @@ export const WebcamFeed = ({ isActive, requiredAction, requiredObject, enableSpe
         gestureRecognizerRef.current = recognizer;
         console.log("Gesture recognizer initialized");
 
+        // Initialize face landmarker for smile detection
+        const faceLandmarker = await FaceLandmarker.createFromOptions(vision, {
+          baseOptions: {
+            modelAssetPath: "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task",
+            delegate: "GPU"
+          },
+          runningMode: "VIDEO",
+          numFaces: 1,
+          minFaceDetectionConfidence: 0.5,
+          minFacePresenceConfidence: 0.5,
+          minTrackingConfidence: 0.5,
+          outputFaceBlendshapes: true
+        });
+        
+        faceLandmarkerRef.current = faceLandmarker;
+        console.log("Face landmarker initialized");
+
         // Initialize object detector
         const detector = await cocoSsd.load();
         objectDetectorRef.current = detector;
@@ -279,6 +298,7 @@ export const WebcamFeed = ({ isActive, requiredAction, requiredObject, enableSpe
 
     return () => {
       gestureRecognizerRef.current?.close();
+      faceLandmarkerRef.current?.close();
     };
   }, []);
 
@@ -334,6 +354,7 @@ export const WebcamFeed = ({ isActive, requiredAction, requiredObject, enableSpe
     const video = videoRef.current;
     const canvas = canvasRef.current;
     const gestureRecognizer = gestureRecognizerRef.current;
+    const faceLandmarker = faceLandmarkerRef.current;
     const objectDetector = objectDetectorRef.current;
 
     if (!video || !canvas) return;
@@ -352,8 +373,45 @@ export const WebcamFeed = ({ isActive, requiredAction, requiredObject, enableSpe
 
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // Gesture detection
-      if (gestureRecognizer && requiredAction) {
+      // Smile detection (check if required action is "smile")
+      if (faceLandmarker && requiredAction === 'smile') {
+        const timestamp = performance.now();
+        const results = faceLandmarker.detectForVideo(video, timestamp);
+
+        if (results.faceLandmarks && results.faceLandmarks.length > 0) {
+          setFaceDetected(true);
+          
+          // Check for smile using blend shapes
+          if (results.faceBlendshapes && results.faceBlendshapes.length > 0) {
+            const blendshapes = results.faceBlendshapes[0].categories;
+            
+            // Find smile-related blend shapes
+            const mouthSmileLeft = blendshapes.find(b => b.categoryName === 'mouthSmileLeft');
+            const mouthSmileRight = blendshapes.find(b => b.categoryName === 'mouthSmileRight');
+            
+            if (mouthSmileLeft && mouthSmileRight) {
+              const smileScore = (mouthSmileLeft.score + mouthSmileRight.score) / 2;
+              setConfidence(smileScore);
+              
+              if (smileScore > 0.5) {
+                setDetectedGestureName('smile');
+                setDetectionStatus("correct");
+                setShowSuccessAnimation(true);
+                setTimeout(() => setShowSuccessAnimation(false), 2000);
+                onGestureDetected('smile');
+              } else {
+                setDetectionStatus("incorrect");
+              }
+            }
+          }
+        } else {
+          setFaceDetected(false);
+          setConfidence(0);
+        }
+      }
+
+      // Gesture detection (for non-smile gestures)
+      if (gestureRecognizer && requiredAction && requiredAction !== 'smile') {
         const timestamp = performance.now();
         const results = gestureRecognizer.recognizeForVideo(video, timestamp);
 
@@ -575,22 +633,43 @@ export const WebcamFeed = ({ isActive, requiredAction, requiredObject, enableSpe
             </div>
           )}
           
-          {requiredAction && !handDetected && (
+          {requiredAction === 'smile' && !faceDetected && (
+            <p className="text-white font-dm-sans text-xs text-center animate-pulse">
+              Show me your face! 😊
+            </p>
+          )}
+          {requiredAction === 'smile' && faceDetected && detectionStatus === "" && (
+            <p className="text-white font-dm-sans text-xs text-center">
+              I can see you! Now SMILE! 😄
+            </p>
+          )}
+          {requiredAction === 'smile' && faceDetected && detectionStatus === "incorrect" && (
+            <p className="text-yellow-300 font-dm-sans text-xs text-center">
+              Bigger smile! Show those teeth! 😁
+            </p>
+          )}
+          {requiredAction === 'smile' && faceDetected && detectionStatus === "correct" && (
+            <p className="text-green-300 font-dm-sans text-xs text-center font-bold">
+              ✅ Beautiful smile!
+            </p>
+          )}
+          
+          {requiredAction && requiredAction !== 'smile' && !handDetected && (
             <p className="text-white font-dm-sans text-xs text-center animate-pulse">
               Show me your hand! 🤚
             </p>
           )}
-          {requiredAction && handDetected && detectionStatus === "" && (
+          {requiredAction && requiredAction !== 'smile' && handDetected && detectionStatus === "" && (
             <p className="text-white font-dm-sans text-xs text-center">
               I can see your hand! 👋
             </p>
           )}
-          {requiredAction && handDetected && detectionStatus === "incorrect" && (
+          {requiredAction && requiredAction !== 'smile' && handDetected && detectionStatus === "incorrect" && (
             <p className="text-yellow-300 font-dm-sans text-xs text-center">
               Almost! Try {requiredAction}ing ☝️
             </p>
           )}
-          {requiredAction && handDetected && detectionStatus === "correct" && (
+          {requiredAction && requiredAction !== 'smile' && handDetected && detectionStatus === "correct" && (
             <p className="text-green-300 font-dm-sans text-xs text-center font-bold">
               ✅ Perfect {requiredAction}!
             </p>

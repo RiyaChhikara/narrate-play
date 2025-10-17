@@ -326,7 +326,9 @@ const StoryPlayer = () => {
               <div className="bg-deep-navy/80 backdrop-blur-xl rounded-2xl sm:rounded-3xl px-6 sm:px-10 md:px-12 py-6 sm:py-8 md:py-10 shadow-xl border border-white/20 text-center max-w-2xl transition-all duration-300 text-white">
                 {currentScene.participation.type === 'gesture' ? (
                   <>
-                    <div className="text-6xl sm:text-7xl md:text-8xl mb-4">🤲</div>
+                    <div className="text-6xl sm:text-7xl md:text-8xl mb-4">
+                      {getActionEmoji(currentScene.participation.expectedResponses?.[0])}
+                    </div>
                     <h2 className="font-fredoka text-2xl sm:text-3xl md:text-4xl font-bold mb-2">
                       {currentScene.participation.prompt}
                     </h2>

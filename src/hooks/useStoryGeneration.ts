@@ -141,9 +141,9 @@ const DEMO_STORY: Story = {
       participation: {
         type: "gesture",
         speaker: "Mom",
-        prompt: "Show us your biggest THUMBS UP to celebrate!",
+        prompt: "Show me your biggest SMILE!",
         targetWord: "rainbow",
-        expectedResponses: ["thumbsup"]
+        expectedResponses: ["smile"]
       },
       ambiance: "rainbow_magic",
       music: "grand_finale"

@@ -27,6 +27,7 @@ const StoryPlayer = () => {
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
   const [canListen, setCanListen] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const hasPlayedSceneRef = useRef<number>(-1); // Track which scene has played audio
 
   // Cleanup: Stop audio when component unmounts or user navigates away
   useEffect(() => {
@@ -84,11 +85,18 @@ const StoryPlayer = () => {
     loadStoryData();
   }, []);
 
-  // Play scene narration when scene changes
+  // Play scene narration when scene changes - ONLY ONCE PER SCENE
   useEffect(() => {
-    if (!currentScene || isGeneratingStory || isPlayingAudio || state === "success") return;
+    if (!currentScene || isGeneratingStory || isPlayingAudio) return;
+    
+    // Prevent replaying audio for same scene
+    if (hasPlayedSceneRef.current === sceneIndex) {
+      console.log(`Scene ${sceneIndex + 1} audio already played, skipping`);
+      return;
+    }
 
     const playSceneNarration = async () => {
+      hasPlayedSceneRef.current = sceneIndex; // Mark this scene as played
       setIsPlayingAudio(true);
       setState("passive");
       setGestureDetected(false);
@@ -96,7 +104,7 @@ const StoryPlayer = () => {
       setCanListen(false);
 
       try {
-        console.log(`Playing scene ${sceneIndex + 1} narration`);
+        console.log(`Playing scene ${sceneIndex + 1} narration (ONCE)`);
         
         // Play each dialogue line in sequence
         for (const line of currentScene.narration) {
@@ -148,7 +156,7 @@ const StoryPlayer = () => {
     };
 
     playSceneNarration();
-  }, [sceneIndex, currentScene?.sceneNumber]); // Only trigger on scene change
+  }, [sceneIndex]); // Only depend on sceneIndex to prevent re-triggers
 
   const checkSceneCompletion = () => {
     if (!currentScene?.participation) return false;

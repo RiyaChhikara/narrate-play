@@ -323,10 +323,10 @@ const StoryPlayer = () => {
       {/* Main Content Area - Responsive Layout */}
       <div className="absolute inset-0 flex items-center justify-center p-4 sm:p-6 md:p-8 pt-24 sm:pt-28 md:pt-32 pb-72 sm:pb-80 md:pb-96">
         <div className="flex flex-col lg:flex-row gap-4 sm:gap-6 lg:gap-8 w-full max-w-7xl h-full max-h-[600px]">
-          {/* Participation Prompt - Responsive */}
-          {state === "action" && currentScene?.participation && (
-            <div className="flex-1 lg:flex-[0.6] flex items-center justify-center animate-fade-in">
-              <div className="bg-deep-navy/80 backdrop-blur-xl rounded-2xl sm:rounded-3xl px-6 sm:px-10 md:px-12 py-6 sm:py-8 md:py-10 shadow-xl border border-white/20 text-center max-w-2xl transition-all duration-300 text-white">
+          {/* Left Side - Participation Prompt or Placeholder */}
+          <div className="flex-1 lg:flex-[0.6] flex items-center justify-center">
+            {state === "action" && currentScene?.participation && (
+              <div className="bg-deep-navy/80 backdrop-blur-xl rounded-2xl sm:rounded-3xl px-6 sm:px-10 md:px-12 py-6 sm:py-8 md:py-10 shadow-xl border border-white/20 text-center max-w-2xl transition-all duration-300 text-white animate-fade-in">
                 {currentScene.participation.type === 'gesture' ? (
                   <>
                     <div className="text-6xl sm:text-7xl md:text-8xl mb-4">
@@ -362,10 +362,10 @@ const StoryPlayer = () => {
                   </>
                 )}
               </div>
-            </div>
-          )}
+            )}
+          </div>
           
-          {/* Webcam Feed - Responsive */}
+          {/* Right Side - Webcam Feed (Fixed Position) */}
           <div className="flex-1 lg:flex-[0.4] min-h-[300px] sm:min-h-[400px]">
             <WebcamFeed 
               isActive={state === "action" || state === "success"} 

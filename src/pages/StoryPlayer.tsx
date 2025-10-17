@@ -94,7 +94,7 @@ const StoryPlayer = () => {
           if (audioBase64) {
             setNarrationText(line.text);
             await playAudioFromBase64(audioBase64);
-            await new Promise(resolve => setTimeout(resolve, 500)); // Brief pause between lines
+            await new Promise(resolve => setTimeout(resolve, 300)); // Brief pause between lines
           }
         }
 
@@ -186,7 +186,7 @@ const StoryPlayer = () => {
     console.log('Scene complete! Moving to success state');
     setState("success");
 
-    // Brief subtle pause
+    // Brief pause
     setTimeout(() => {
       console.log('Moving to next scene or ending story');
       
@@ -198,13 +198,9 @@ const StoryPlayer = () => {
         setSpeechDetected(false);
       } else {
         console.log('Story complete!');
-        toast({
-          title: "Story Complete",
-          description: "Well done",
-        });
         setTimeout(() => navigate("/stories"), 1500);
       }
-    }, 1200);
+    }, 800);
   };
 
   const generateConversationalResponse = async () => {
@@ -227,6 +223,7 @@ const StoryPlayer = () => {
       clap: "👏",
       jump: "🦘",
       thumbsup: "👍",
+      smile: "😊",
     };
     return action ? emojiMap[action] || "✨" : "✨";
   };
@@ -377,11 +374,11 @@ const StoryPlayer = () => {
         </div>
       </div>
 
-      {/* Enhanced Progress Indicator - Visual Journey */}
-      <div className="absolute bottom-72 left-1/2 -translate-x-1/2 z-20 pointer-events-none">
-        <div className="flex items-center gap-4 bg-black/40 backdrop-blur-md px-8 py-4 rounded-full shadow-2xl">
+      {/* Vertical Progress Indicator - Left Side */}
+      <div className="absolute left-6 top-1/2 -translate-y-1/2 z-20 pointer-events-none">
+        <div className="flex flex-col items-center gap-3 bg-black/40 backdrop-blur-md px-4 py-6 rounded-full shadow-2xl">
           {storyScenes.map((_, idx) => (
-            <div key={idx} className="flex items-center">
+            <div key={idx} className="flex flex-col items-center">
               <div
                 className={`relative transition-all duration-500 ${
                   idx === sceneIndex
@@ -406,7 +403,7 @@ const StoryPlayer = () => {
               </div>
               {idx < storyScenes.length - 1 && (
                 <div
-                  className={`w-12 h-1 mx-2 rounded-full transition-all duration-500 ${
+                  className={`w-1 h-10 my-2 rounded-full transition-all duration-500 ${
                     idx < sceneIndex ? 'bg-green-400' : 'bg-white/20'
                   }`}
                 />
@@ -422,7 +419,7 @@ const StoryPlayer = () => {
           <div className="text-center bg-white/95 backdrop-blur-xl rounded-3xl px-12 py-8 shadow-xl border border-border animate-scale-in">
             <div className="text-6xl mb-4">✓</div>
             <h2 className="font-fredoka text-3xl font-bold text-foreground">
-              Excellent
+              Perfect!
             </h2>
           </div>
         </div>

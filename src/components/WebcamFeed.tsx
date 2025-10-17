@@ -73,6 +73,12 @@ export const WebcamFeed = ({ isActive, requiredAction, requiredObject, enableSpe
   const onObjectDetectedRef = useRef<WebcamFeedProps["onObjectDetected"] | null>(null);
   const animationFrameRef = useRef<number | null>(null);
 
+  // Mic state control to avoid rapid start/stop loops
+  const isListeningRef = useRef<boolean>(false);
+  const lastStartAtRef = useRef<number>(0);
+  const cooldownRef = useRef<number>(2000);
+  const pausedByVisibilityRef = useRef<boolean>(false);
+
   // Keep latest callback without retriggering effects
   useEffect(() => {
     onObjectDetectedRef.current = onObjectDetected;
@@ -128,25 +134,30 @@ export const WebcamFeed = ({ isActive, requiredAction, requiredObject, enableSpe
 
     const safeRestart = () => {
       if (!speechModeActive || manuallyStoppedRef.current) return;
-      if (isStartingRef.current) return;
+      if (isStartingRef.current || isListeningRef.current) return;
+      const now = Date.now();
+      if (now - lastStartAtRef.current < cooldownRef.current) return;
       const delay = backoffRef.current;
-      restartTimeoutRef.current && clearTimeout(restartTimeoutRef.current);
+      if (restartTimeoutRef.current) window.clearTimeout(restartTimeoutRef.current);
       restartTimeoutRef.current = window.setTimeout(() => {
-        if (!speechModeActive || manuallyStoppedRef.current) return;
+        if (!speechModeActive || manuallyStoppedRef.current || isStartingRef.current || isListeningRef.current) return;
         try {
           isStartingRef.current = true;
+          (recognition as any).abort?.(); // ensure clean state when supported
           recognition.start();
         } catch (e) {
           console.error('Failed to (re)start recognition:', e);
         }
       }, delay);
-      backoffRef.current = Math.min(backoffRef.current * 1.5, 4000);
+      backoffRef.current = Math.min(backoffRef.current * 1.5, 5000);
     };
 
     const handleStart = () => {
       console.log("🎤 Speech recognition started");
       isStartingRef.current = false;
       backoffRef.current = 500; // reset backoff on success
+      lastStartAtRef.current = Date.now();
+      isListeningRef.current = true;
       setIsListening(true);
     };
 
@@ -164,18 +175,25 @@ export const WebcamFeed = ({ isActive, requiredAction, requiredObject, enableSpe
 
     const handleError = (event: any) => {
       const err = event?.error;
+      // 'aborted' often happens on stop() or duplicate start; ignore and let onend handle
+      if (err === 'aborted') {
+        return;
+      }
       console.error("❌ Speech recognition error:", err);
-      // 'aborted' often happens on stop() or page changes - handled by onend
       if (err === 'not-allowed') {
         console.error("Microphone permission denied!");
         manuallyStoppedRef.current = true;
+      } else {
+        // Increase backoff a bit on other errors
+        backoffRef.current = Math.min(Math.max(backoffRef.current, 1000) * 1.25, 5000);
       }
     };
 
     const handleEnd = () => {
       console.log("Speech recognition ended");
+      isListeningRef.current = false;
       setIsListening(false);
-      if (speechModeActive && !manuallyStoppedRef.current && !document.hidden) {
+      if (speechModeActive && !manuallyStoppedRef.current && !document.hidden && !pausedByVisibilityRef.current) {
         console.log("Restarting mic with backoff", backoffRef.current, 'ms');
         safeRestart();
       }
@@ -202,10 +220,14 @@ export const WebcamFeed = ({ isActive, requiredAction, requiredObject, enableSpe
     // Pause mic when tab is hidden
     const onVisibility = () => {
       if (document.hidden) {
+        pausedByVisibilityRef.current = true;
         try { recognition.stop(); } catch {}
+        isListeningRef.current = false;
         setIsListening(false);
       } else if (speechModeActive) {
-        safeRestart();
+        pausedByVisibilityRef.current = false;
+        // small delay to avoid flicker when returning to tab
+        window.setTimeout(() => safeRestart(), 300);
       }
     };
     document.addEventListener('visibilitychange', onVisibility);

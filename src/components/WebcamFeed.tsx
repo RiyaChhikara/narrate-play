@@ -665,11 +665,6 @@ export const WebcamFeed = ({ isActive, requiredAction, requiredObject, enableSpe
             </p>
           )}
           
-          {requiredAction && requiredAction !== 'smile' && !handDetected && (
-            <p className="text-white font-dm-sans text-xs text-center animate-pulse">
-              Show me your hand! 🤚
-            </p>
-          )}
           {requiredAction && requiredAction !== 'smile' && handDetected && detectionStatus === "" && (
             <p className="text-white font-dm-sans text-xs text-center">
               I can see your hand! 👋

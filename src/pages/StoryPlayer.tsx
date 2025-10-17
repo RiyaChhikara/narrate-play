@@ -156,7 +156,7 @@ const StoryPlayer = () => {
     };
 
     playSceneNarration();
-  }, [sceneIndex]); // Only depend on sceneIndex to prevent re-triggers
+  }, [sceneIndex, currentScene?.sceneNumber]); // Trigger when scene index or scene data becomes available
 
   const checkSceneCompletion = () => {
     if (!currentScene?.participation) return false;

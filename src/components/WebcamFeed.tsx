@@ -97,6 +97,12 @@ export const WebcamFeed = ({ isActive, requiredAction, requiredObject, enableSpe
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState("");
 
+  // Smile detection tuning constants
+  const SMILE_MIN = 0.6;
+  const MOUTH_OPEN_MIN = 0.2;
+  const HOLD_FRAMES = 8; // require sustained smile for n frames
+  const smileHoldFramesRef = useRef<number>(0);
+
   // Initialize speech recognition
   useEffect(() => {
     // Only listen during speech tasks when explicitly enabled (speech mode)
@@ -396,22 +402,30 @@ export const WebcamFeed = ({ isActive, requiredAction, requiredObject, enableSpe
             const mouthSmileLeft = blendshapes.find(b => b.categoryName === 'mouthSmileLeft');
             const mouthSmileRight = blendshapes.find(b => b.categoryName === 'mouthSmileRight');
             const jawOpen = blendshapes.find(b => b.categoryName === 'jawOpen');
+            const mouthOpenBlend = blendshapes.find(b => b.categoryName === 'mouthOpen');
             
-            if (mouthSmileLeft && mouthSmileRight && jawOpen) {
+            if (mouthSmileLeft && mouthSmileRight) {
               const smileScore = (mouthSmileLeft.score + mouthSmileRight.score) / 2;
-              const mouthOpen = jawOpen.score;
+              const mouthOpen = mouthOpenBlend?.score ?? jawOpen?.score ?? 0;
               
-              // Require BOTH a strong smile AND teeth showing (mouth open)
+              // Combine into a confidence metric but gate by thresholds
               const combinedScore = smileScore * 0.7 + mouthOpen * 0.3;
               setConfidence(combinedScore);
               
-              // Much stricter thresholds: need big smile AND visible teeth
-              if (smileScore > 0.7 && mouthOpen > 0.3) {
+              // Check thresholds and require sustained frames
+              if (smileScore > SMILE_MIN && mouthOpen > MOUTH_OPEN_MIN) {
+                smileHoldFramesRef.current += 1;
+              } else {
+                smileHoldFramesRef.current = 0;
+              }
+              
+              if (smileHoldFramesRef.current >= HOLD_FRAMES) {
                 setDetectedGestureName('smile');
                 setDetectionStatus("correct");
                 setShowSuccessAnimation(true);
                 setTimeout(() => setShowSuccessAnimation(false), 2000);
                 onGestureDetected('smile');
+                smileHoldFramesRef.current = 0; // reset after success
               } else {
                 setDetectionStatus("incorrect");
               }

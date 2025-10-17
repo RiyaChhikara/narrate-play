@@ -245,6 +245,13 @@ export const WebcamFeed = ({ isActive, requiredAction, requiredObject, enableSpe
     };
   }, [isActive, requiredAction, enableSpeech]);
 
+  // Clear gesture name when requiredAction changes to prevent stale gesture display
+  useEffect(() => {
+    setDetectedGestureName("");
+    setDetectionStatus("");
+    setConfidence(0);
+  }, [requiredAction]);
+
   useEffect(() => {
     const initModels = async () => {
       try {
@@ -385,15 +392,21 @@ export const WebcamFeed = ({ isActive, requiredAction, requiredObject, enableSpe
           if (results.faceBlendshapes && results.faceBlendshapes.length > 0) {
             const blendshapes = results.faceBlendshapes[0].categories;
             
-            // Find smile-related blend shapes
+            // Find smile-related and mouth opening blend shapes
             const mouthSmileLeft = blendshapes.find(b => b.categoryName === 'mouthSmileLeft');
             const mouthSmileRight = blendshapes.find(b => b.categoryName === 'mouthSmileRight');
+            const jawOpen = blendshapes.find(b => b.categoryName === 'jawOpen');
             
-            if (mouthSmileLeft && mouthSmileRight) {
+            if (mouthSmileLeft && mouthSmileRight && jawOpen) {
               const smileScore = (mouthSmileLeft.score + mouthSmileRight.score) / 2;
-              setConfidence(smileScore);
+              const mouthOpen = jawOpen.score;
               
-              if (smileScore > 0.5) {
+              // Require BOTH a strong smile AND teeth showing (mouth open)
+              const combinedScore = smileScore * 0.7 + mouthOpen * 0.3;
+              setConfidence(combinedScore);
+              
+              // Much stricter thresholds: need big smile AND visible teeth
+              if (smileScore > 0.7 && mouthOpen > 0.3) {
                 setDetectedGestureName('smile');
                 setDetectionStatus("correct");
                 setShowSuccessAnimation(true);

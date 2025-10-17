@@ -74,7 +74,7 @@ const StoryPlayer = () => {
 
   // Play scene narration when scene changes
   useEffect(() => {
-    if (!currentScene || isGeneratingStory || isPlayingAudio) return;
+    if (!currentScene || isGeneratingStory || isPlayingAudio || state === "success") return;
 
     const playSceneNarration = async () => {
       setIsPlayingAudio(true);
@@ -368,7 +368,7 @@ const StoryPlayer = () => {
           {/* Webcam Feed - Responsive */}
           <div className="flex-1 lg:flex-[0.4] min-h-[300px] sm:min-h-[400px]">
             <WebcamFeed 
-              isActive={state === "action"} 
+              isActive={state === "action" || state === "success"} 
               requiredAction={currentScene?.participation?.type === 'gesture' ? currentScene.participation.expectedResponses?.[0] : undefined}
               requiredObject={undefined}
               enableSpeech={canListen}
@@ -387,7 +387,7 @@ const StoryPlayer = () => {
               <div
                 className={`relative transition-all duration-500 ${
                   idx === sceneIndex
-                    ? 'w-12 h-12 animate-pulse'
+                    ? 'w-12 h-12'
                     : 'w-8 h-8'
                 }`}
               >

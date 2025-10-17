@@ -97,10 +97,11 @@ export const WebcamFeed = ({ isActive, requiredAction, requiredObject, enableSpe
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState("");
 
-  // Smile detection tuning constants - manageable thresholds
-  const SMILE_MIN = 0.5;  // smile strength required
-  const MOUTH_OPEN_MIN = 0.15;  // slight teeth showing
-  const HOLD_FRAMES = 5; // require sustained smile for 5 frames (~0.2s at 30fps)
+  // Smile detection thresholds tuned for a BIG smile
+  const BIG_SMILE_MIN = 0.7; // very clear smile
+  const SMILE_MIN = 0.55;  // moderate smile
+  const MOUTH_OPEN_MIN = 0.2;  // slight mouth opening (teeth optional)
+  const HOLD_FRAMES = 6; // sustain for ~0.2s at 30fps
   const smileHoldFramesRef = useRef<number>(0);
 
   // Initialize speech recognition
@@ -408,12 +409,16 @@ export const WebcamFeed = ({ isActive, requiredAction, requiredObject, enableSpe
               const smileScore = (mouthSmileLeft.score + mouthSmileRight.score) / 2;
               const mouthOpen = mouthOpenBlend?.score ?? jawOpen?.score ?? 0;
               
-              // Combine into a confidence metric but gate by thresholds
-              const combinedScore = smileScore * 0.7 + mouthOpen * 0.3;
+              // Confidence meter biased toward smile
+              const combinedScore = smileScore * 0.85 + mouthOpen * 0.15;
               setConfidence(combinedScore);
-              
-              // Check thresholds and require sustained frames
-              if (smileScore > SMILE_MIN && mouthOpen > MOUTH_OPEN_MIN) {
+
+              // Big-smile rule: very strong smile OR good smile + some mouth opening
+              const isBigSmile =
+                smileScore >= BIG_SMILE_MIN ||
+                (smileScore >= SMILE_MIN && mouthOpen >= MOUTH_OPEN_MIN);
+
+              if (isBigSmile) {
                 smileHoldFramesRef.current += 1;
               } else {
                 smileHoldFramesRef.current = 0;

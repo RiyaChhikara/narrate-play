@@ -97,11 +97,11 @@ export const WebcamFeed = ({ isActive, requiredAction, requiredObject, enableSpe
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState("");
 
-  // Smile detection thresholds tuned for a BIG smile
-  const BIG_SMILE_MIN = 0.7; // very clear smile
-  const SMILE_MIN = 0.55;  // moderate smile
-  const MOUTH_OPEN_MIN = 0.2;  // slight mouth opening (teeth optional)
-  const HOLD_FRAMES = 6; // sustain for ~0.2s at 30fps
+  // Smile detection thresholds tuned for a BIG smile (closed-mouth friendly)
+  const BIG_SMILE_MIN = 0.6; // strong smile even with mouth closed
+  const SMILE_MIN = 0.5;  // moderate smile
+  const MOUTH_OPEN_MIN = 0.1;  // optional mouth opening support
+  const HOLD_FRAMES = 4; // shorter hold for responsiveness
   const smileHoldFramesRef = useRef<number>(0);
 
   // Initialize speech recognition

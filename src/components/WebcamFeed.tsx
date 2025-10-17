@@ -97,10 +97,10 @@ export const WebcamFeed = ({ isActive, requiredAction, requiredObject, enableSpe
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState("");
 
-  // Smile detection tuning constants
-  const SMILE_MIN = 0.6;
-  const MOUTH_OPEN_MIN = 0.2;
-  const HOLD_FRAMES = 8; // require sustained smile for n frames
+  // Smile detection tuning constants - manageable thresholds
+  const SMILE_MIN = 0.5;  // smile strength required
+  const MOUTH_OPEN_MIN = 0.15;  // slight teeth showing
+  const HOLD_FRAMES = 5; // require sustained smile for 5 frames (~0.2s at 30fps)
   const smileHoldFramesRef = useRef<number>(0);
 
   // Initialize speech recognition

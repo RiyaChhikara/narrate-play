@@ -44,20 +44,22 @@ export const useAudioGeneration = () => {
       }
 
       // Not in cache, generate via API
-      console.log('✗ Not in cache, generating via API...');
+      console.log('✗ Not in cache, generating via API with key:', cacheKey);
       const { data, error } = await supabase.functions.invoke('generate-audio', {
         body: { text, speaker, emotion, cacheKey }
       });
 
       if (error) {
+        console.error('Edge function error:', error);
         throw error;
       }
 
       if (!data?.audioContent) {
+        console.error('No audio content in response:', data);
         throw new Error('No audio data received');
       }
 
-      console.log('✓ Audio generated and cached');
+      console.log('✓ Audio generated and should be cached');
       return data.audioContent;
 
     } catch (err) {

@@ -72,14 +72,23 @@ serve(async (req) => {
     // Cache the audio to storage if cacheKey is provided
     if (cacheKey) {
       try {
+        console.log('Starting cache upload for key:', cacheKey);
         const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
         const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+        
+        if (!supabaseServiceKey) {
+          console.error('SUPABASE_SERVICE_ROLE_KEY not found!');
+          throw new Error('Service key not configured');
+        }
+        
         const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
         const filePath = `${cacheKey}.mp3`;
         const audioBlob = new Uint8Array(audioBuffer);
+        
+        console.log(`Uploading to storage: ${filePath} (${audioBlob.length} bytes)`);
 
-        const { error: uploadError } = await supabase.storage
+        const { error: uploadError, data: uploadData } = await supabase.storage
           .from('audio-cache')
           .upload(filePath, audioBlob, {
             contentType: 'audio/mpeg',
@@ -87,13 +96,15 @@ serve(async (req) => {
           });
 
         if (uploadError) {
-          console.error('Failed to cache audio:', uploadError);
+          console.error('❌ Failed to cache audio:', uploadError.message, uploadError);
         } else {
-          console.log('✓ Audio cached to storage:', filePath);
+          console.log('✅ Audio successfully cached:', filePath, uploadData);
         }
       } catch (cacheError) {
-        console.error('Cache error (non-fatal):', cacheError);
+        console.error('❌ Cache exception:', cacheError);
       }
+    } else {
+      console.warn('⚠️  No cacheKey provided, skipping cache');
     }
 
     return new Response(

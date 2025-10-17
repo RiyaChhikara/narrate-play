@@ -162,55 +162,10 @@ export const useStoryGeneration = () => {
     useDemoMode: boolean = false,
     languages?: string[]
   ): Promise<Story | null> => {
-    setIsLoading(true);
-    setError(null);
-
-    // Instant demo story for presentations
-    if (useDemoMode) {
-      console.log('Using demo story (instant)');
-      setIsLoading(false);
-      return DEMO_STORY;
-    }
-
-    try {
-      console.log('Generating story with:', { targetWords, gestures, childName });
-
-      // Set a 10-second timeout for AI generation
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Story generation timeout')), 10000)
-      );
-
-      const generatePromise = supabase.functions.invoke('generate-story', {
-        body: { targetWords, gestures, childName, languages }
-      });
-
-      const { data, error: functionError } = await Promise.race([
-        generatePromise,
-        timeoutPromise
-      ]) as any;
-
-      if (functionError) {
-        throw new Error(functionError.message);
-      }
-
-      if (!data) {
-        throw new Error('No story data received');
-      }
-
-      console.log('Story generated:', data);
-      return data as Story;
-
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to generate story';
-      console.error('Story generation error, using fallback:', err);
-      setError(errorMessage);
-      
-      // Return demo story as fallback
-      console.log('Using demo story as fallback');
-      return DEMO_STORY;
-    } finally {
-      setIsLoading(false);
-    }
+    // ALWAYS use the fixed demo story - no API calls, no dynamic generation
+    console.log('Using fixed demo story (no API calls)');
+    setIsLoading(false);
+    return DEMO_STORY;
   };
 
   return { generateStory, isLoading, error };

@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 const HeroSection = () => {
   const navigate = useNavigate();
   const videoRef = useRef<HTMLVideoElement>(null);
+  const audioRef = useRef<HTMLAudioElement>(null);
   const [parallax, setParallax] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
@@ -25,6 +26,14 @@ const HeroSection = () => {
   }, []);
 
   useEffect(() => {
+    const audio = audioRef.current;
+    if (audio) {
+      audio.volume = 0.15; // Low volume for ambient sound
+      audio.play().catch(err => console.log("Audio autoplay blocked:", err));
+    }
+  }, []);
+
+  useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       const x = (e.clientX / window.innerWidth - 0.5) * 2;
       const y = (e.clientY / window.innerHeight - 0.5) * 2;
@@ -37,6 +46,17 @@ const HeroSection = () => {
 
   return (
     <section className="relative w-full h-screen overflow-hidden">
+      <audio
+        ref={audioRef}
+        loop
+        preload="auto"
+      >
+        <source
+          src="https://cdn.pixabay.com/audio/2024/09/04/audio_e4dc54fe22.mp3"
+          type="audio/mpeg"
+        />
+      </audio>
+      
       <video
         ref={videoRef}
         autoPlay

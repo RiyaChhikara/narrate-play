@@ -644,18 +644,14 @@ export const WebcamFeed = ({ isActive, requiredAction, requiredObject, enableSpe
           {requiredAction === 'smile' ? (
             <>
               <div>Face: <span className="text-yellow-400">{faceDetected ? 'detected' : 'none'}</span></div>
-              {detectedGestureName && (
-                <div>Gesture: <span className="text-blue-400">{detectedGestureName}</span></div>
-              )}
             </>
-          ) : (
+          ) : requiredAction ? (
             <>
-              <div>Hand: <span className="text-yellow-400">{handDetected ? 'detected' : 'none'}</span></div>
-              {detectedGestureName && (
-                <div>Gesture: <span className="text-blue-400">{detectedGestureName}</span></div>
+              {handDetected && (
+                <div>Hand: <span className="text-yellow-400">detected</span></div>
               )}
             </>
-          )}
+          ) : null}
           {confidence > 0 && (
             <div>Conf: <span className="text-purple-400">{(confidence * 100).toFixed(0)}%</span></div>
           )}

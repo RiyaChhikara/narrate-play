@@ -106,15 +106,26 @@ const StoryPlayer = () => {
       try {
         console.log(`Playing scene ${sceneIndex + 1} narration (ONCE)`);
         
-        // Play each dialogue line in sequence
-        for (const line of currentScene.narration) {
-          console.log(`Playing line: "${line.text}"`);
-          const audioBase64 = await generateAudio(line.text, line.speaker, line.emotion);
+        // Preload all audio first to eliminate gaps
+        console.log('Preloading all audio...');
+        const audioPromises = currentScene.narration.map(line => 
+          generateAudio(line.text, line.speaker, line.emotion)
+        );
+        const allAudio = await Promise.all(audioPromises);
+        console.log('All audio preloaded!');
+        
+        // Play each dialogue line in sequence with no gaps
+        for (let i = 0; i < currentScene.narration.length; i++) {
+          const line = currentScene.narration[i];
+          const audioBase64 = allAudio[i];
           
           if (audioBase64) {
             setNarrationText(line.text);
             await playAudioFromBase64(audioBase64, audioRef);
-            await new Promise(resolve => setTimeout(resolve, 300)); // Brief pause between lines
+            // Minimal pause only between lines, not at the end
+            if (i < currentScene.narration.length - 1) {
+              await new Promise(resolve => setTimeout(resolve, 100));
+            }
           }
         }
 
